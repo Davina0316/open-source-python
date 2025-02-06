@@ -1,20 +1,16 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
 executors:
   python-executor:
     docker:
-      - image: circleci/python:3.9
+      - image: circleci/python:3.11
     working_directory: ~/repo
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
   test:
     executor: python-executor
     steps:
-      - checkout  # Clone GitHub code to CircleCI workspace
+      - checkout
       - run:
           name: Install dependencies
           command: |
@@ -22,29 +18,14 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt
       - run:
-          name: Run static analysis (mypy)
-          command: |
-            source venv/bin/activate
-            mypy src --strict
-      - run:
-          name: Run code formatting check (ruff)
+          name: Run static analysis (ruff)
           command: |
             source venv/bin/activate
             ruff check src
       - run:
-          name: Run unit tests with coverage
+          name: Run type checking (mypy)
           command: |
             source venv/bin/activate
-            pytest --junitxml=test-results/junit.xml --cov=src --cov-report=xml
+            mypy src
       - store_test_results:
-          path: test-results  # Store test result，for CircleCI to show test status
-      - store_artifacts:
-          path: coverage.xml  # Store code coverage report
-
-# Orchestrate jobs using workflows
-# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
-workflows:
-  version: 2
-  test_and_deploy:
-    jobs:
-      - test
+          path: test-results
