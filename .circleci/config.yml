@@ -2,30 +2,49 @@
 # See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
+executors:
+  python-executor:
+    docker:
+      - image: circleci/python:3.9
+    working_directory: ~/repo
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/executor-intro/ & https://circleci.com/docs/configuration-reference/#executor-job
-    docker:
-      # Specify the version you desire here
-      # See: https://circleci.com/developer/images/image/cimg/base
-      - image: cimg/base:current
-
-    # Add steps to the job
-    # See: https://circleci.com/docs/jobs-steps/#steps-overview & https://circleci.com/docs/configuration-reference/#steps
+  test:
+    executor: python-executor
     steps:
-      # Checkout the code as the first step.
-      - checkout
+      - checkout  # Clone GitHub code to CircleCI workspace
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Install dependencies
+          command: |
+            python -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: Run static analysis (mypy)
+          command: |
+            source venv/bin/activate
+            mypy src --strict
+      - run:
+          name: Run code formatting check (ruff)
+          command: |
+            source venv/bin/activate
+            ruff check src
+      - run:
+          name: Run unit tests with coverage
+          command: |
+            source venv/bin/activate
+            pytest --junitxml=test-results/junit.xml --cov=src --cov-report=xml
+      - store_test_results:
+          path: test-results  # Store test result，for CircleCI to show test status
+      - store_artifacts:
+          path: coverage.xml  # Store code coverage report
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
 workflows:
-  say-hello-workflow: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  version: 2
+  test_and_deploy:
     jobs:
-      - say-hello
+      - test
