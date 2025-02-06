@@ -1,0 +1,13 @@
+# Dependency management
+uv
+
+# Static analysis & code formatting
+ruff
+mypy
+
+# Testing framework
+pytest
+pytest-cov
+
+# Code coverage tool
+coverage
