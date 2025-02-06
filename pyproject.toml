@@ -1,0 +1,27 @@
+[tool.ruff]
+line-length = 100
+select = ["ALL"]  # Enable all rules in Ruff
+ignore = [
+    "E501",  # Ignore line length issues (100 characters is already strict enough)
+    "ANN101", # Ignore missing type annotation for `self` (self and cls don't need type hints)
+    "D100",  # Ignore missing module-level docstring (not always necessary in small projects)
+    "D103",  # Ignore missing function docstring (test functions should be self-explanatory)
+]
+
+[tool.ruff.lint]
+fixable = ["ALL"]  # Allow Ruff to auto-fix all issues
+
+[tool.mypy]
+strict = true  # Enable strict mode for type checking
+
+disallow_untyped_calls = true  # Prevent calling functions without type annotations
+disallow_untyped_defs = true  # Prevent defining functions without type annotations
+disallow_incomplete_defs = true  # Ensure all function annotations are complete
+
+warn_unused_ignores = true  # Warn if `# type: ignore` is used but unnecessary
+warn_redundant_casts = true  # Warn about redundant type casts
+warn_unreachable = true  # Warn about unreachable code
+warn_return_any = true  # Warn if a function returns `Any`
+warn_unused_configs = true  # Warn about unused mypy configurations
+
+ignore_missing_imports = true  # Ignore missing imports (some external libraries may lack type hints)
