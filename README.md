@@ -16,31 +16,33 @@ This repository serves as a Python project template for **CS-GY 9223 Open Source
 ### **1. Clone the Repository**
 ```bash
 git clone <repository-url>
-
-
+```
 
 ### **2. Navigate to the Project Directory**
 ```bash
 cd open-source-python
+```
 
 ### **3. Install uv (if not already installed)**
 ```bash
 pip install uv
-
+```
 
 ### **3. Install uv (if not already installed)**
 ```bash
 pip install uv
-
+```
 
 ### **4. Install Project Dependencies**
 ```bash
 uv pip install -r requirements.txt
+```
 
 ## Running the Application
 To run the application, use:
 ```bash
 python src/main.py
+```
 
 Replace src/main.py with the actual entry point of your project.
 
@@ -49,6 +51,7 @@ Replace src/main.py with the actual entry point of your project.
 To run tests, execute:
 ```bash
 pytest --cov=src
+```
 
 This will run unit tests and generate a coverage report.
 
@@ -57,6 +60,7 @@ To check and auto-fix code style and type errors, run:
 ```bash
 ruff check src --fix
 mypy src
+```
 
 ## Continuous Integration (CI/CD)
 This project is set up with **CircleCI**, which automatically:
