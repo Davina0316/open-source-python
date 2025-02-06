@@ -28,11 +28,6 @@ cd open-source-python
 pip install uv
 ```
 
-### **3. Install uv (if not already installed)**
-```bash
-pip install uv
-```
-
 ### **4. Install Project Dependencies**
 ```bash
 uv pip install -r requirements.txt
