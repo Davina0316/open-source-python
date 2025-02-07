@@ -34,3 +34,8 @@ jobs:
             pytest tests --junitxml=test-results/junit.xml
       - store_test_results:
           path: test-results
+          
+workflows:
+  build_and_test:
+    jobs:
+      - test
