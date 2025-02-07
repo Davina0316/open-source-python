@@ -3,7 +3,7 @@ version: 2.1
 executors:
   python-executor:
     docker:
-      - image: circleci/python:3.11
+      - image: cimg/python:3.11
     working_directory: ~/repo
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
             pytest tests --junitxml=test-results/junit.xml
       - store_test_results:
           path: test-results
-          
+
 workflows:
   build_and_test:
     jobs:
