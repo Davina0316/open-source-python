@@ -7,35 +7,63 @@ executors:
     working_directory: ~/repo
 
 jobs:
-  test:
+  lint:
     executor: python-executor
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install lint dependencies
           command: |
             python -m venv venv
             source venv/bin/activate
-            pip install -r requirements.txt
+            pip install ruff==0.0.259  # or use a pinned version from your requirements
       - run:
-          name: Run static analysis (ruff)
+          name: Run static analysis (Ruff)
           command: |
             source venv/bin/activate
             ruff check src
+
+  type-check:
+    executor: python-executor
+    steps:
+      - checkout
+      - run:
+          name: Install mypy dependencies
+          command: |
+            python -m venv venv
+            source venv/bin/activate
+            pip install mypy==1.0.1  # or install from requirements.txt
       - run:
           name: Run type checking (mypy)
           command: |
             source venv/bin/activate
             mypy src
+
+  test:
+    executor: python-executor
+    steps:
+      - checkout
+      - run:
+          name: Install testing dependencies
+          command: |
+            python -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
       - run:
           name: Run tests
           command: |
             source venv/bin/activate
-            pytest tests --junitxml=test-results/junit.xml
+            mkdir -p test-results
+            pytest tests --junitxml=test-results/results.xml
       - store_test_results:
           path: test-results
 
 workflows:
   build_and_test:
     jobs:
-      - test
+      - lint
+      - type-check
+      - test:
+          requires:
+            - lint
+            - type-check
