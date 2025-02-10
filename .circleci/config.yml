@@ -62,6 +62,7 @@ jobs:
           name: Run tests and generate coverage report
           command: |
             source venv/bin/activate
+            mkdir -p test-results
             # Run pytest under coverage, generating a JUnit XML test report
             coverage run --source=src -m pytest tests --junitxml=test-results/results.xml
             # Generate a coverage.xml and html report
