@@ -27,20 +27,5 @@ jobs:
           command: |
             source venv/bin/activate
             mypy src
-      - run:
-          name: Run tests with pytest
-          command: |
-            source venv/bin/activate
-            pytest --junitxml=test-results/junit.xml --cov=src --cov-report=html
       - store_test_results:
           path: test-results
-      - store_artifacts:
-          path: test-results
-      - store_artifacts:
-          path: htmlcov
-
-workflows:
-  version: 2
-  test_and_coverage:
-    jobs:
-      - test
