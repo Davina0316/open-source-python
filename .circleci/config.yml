@@ -27,7 +27,7 @@ jobs:
           command: |
             source venv/bin/activate
             mypy src
-       run:
+      - run:
           name: Run tests with pytest
           command: |
             source venv/bin/activate
@@ -37,7 +37,7 @@ jobs:
       - store_artifacts:
           path: test-results
       - store_artifacts:
-          path: htmlcov 
+          path: htmlcov
 
 workflows:
   version: 2
