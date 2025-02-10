@@ -63,9 +63,10 @@ jobs:
           command: |
             source venv/bin/activate
             # Run pytest under coverage, generating a JUnit XML test report
-            coverage run --source=src -m pytest test --junitxml=test-results/results.xml
-            # Generate a coverage.xml report
+            coverage run --source=src -m pytest tests --junitxml=test-results/results.xml
+            # Generate a coverage.xml and html report
             coverage xml
+            coverage html -d coverage_html
             # Print coverage summary in the CircleCI logs
             coverage report -m
       - store_test_results:
@@ -73,6 +74,9 @@ jobs:
       - store_artifacts:
           path: coverage.xml
           destination: coverage-report
+      - store_artifacts:
+          path: coverage_html
+          destination: coverage-html
 
 workflows:
   build_and_test:
