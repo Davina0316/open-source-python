@@ -1,4 +1,5 @@
-from src.logger import Logger
+import pytest
+from src.logger.logger import Logger
 
 def test_logger():
     logger = Logger()

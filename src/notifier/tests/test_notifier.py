@@ -1,4 +1,5 @@
-from src.notifier import Notifier
+import pytest
+from src.notifier.notifier import Notifier
 
 def test_notifier():
     notifier = Notifier(threshold=10)

@@ -1,5 +1,5 @@
-from src.logger import Logger
-from src.notifier import Notifier
+from src.logger.logger import Logger
+from src.notifier.notifier import Notifier
 from unittest.mock import Mock
 
 def test_logger_notifier():
