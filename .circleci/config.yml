@@ -19,7 +19,7 @@ jobs:
           name: Install uv
           command: |
             curl -LsSf https://astral.sh/uv/install.sh | sh
-            uvx run ruff check src
+            uv tool run ruff check src
       - run:
           name: Create and install dependencies
           command: |
