@@ -42,7 +42,7 @@ jobs:
       - run:
           name: Run lint (Ruff)
           command: |
-            source venv/bin/activate
+            source .venv/bin/activate
             ruff check src
 
   type-check:
@@ -53,7 +53,7 @@ jobs:
       - run:
           name: Run type checking (mypy)
           command: |
-            source venv/bin/activate
+            source .venv/bin/activate
             mypy src
 
   test:
@@ -64,7 +64,7 @@ jobs:
       - run:
           name: Run tests and generate coverage report
           command: |
-            source venv/bin/activate
+            source .venv/bin/activate
             mkdir -p test-results
             # Run pytest under coverage, generating a JUnit XML test report
             coverage run --source=src -m pytest tests \
