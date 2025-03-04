@@ -1,4 +1,3 @@
-import pytest
 from src.notifier.notifier import Notifier
 
 def test_notifier():

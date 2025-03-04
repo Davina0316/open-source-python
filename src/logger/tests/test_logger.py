@@ -1,4 +1,3 @@
-import pytest
 from src.logger.logger import Logger
 
 def test_logger():

@@ -1,4 +1,3 @@
-import pytest
 from src.calculator.calculator import Calculator
 
 @pytest.fixture
