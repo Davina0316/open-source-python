@@ -1,3 +1,6 @@
+# Dependency management
+uv
+
 # Static analysis & code formatting
 ruff
 mypy
