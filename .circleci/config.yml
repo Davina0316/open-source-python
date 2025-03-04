@@ -23,7 +23,6 @@ jobs:
           name: Create and install dependencies
           command: |
             uv venv --python 3.11
-            ls
             source .venv/bin/activate
             uv pip install -r requirements.txt
       - persist_to_workspace:
@@ -43,7 +42,6 @@ jobs:
       - run:
           name: Run lint (Ruff)
           command: |
-            ls
             source .venv/bin/activate
             ruff check src
 
@@ -55,7 +53,6 @@ jobs:
       - run:
           name: Run type checking (mypy)
           command: |
-            ls
             source .venv/bin/activate
             mypy src
 
@@ -67,7 +64,6 @@ jobs:
       - run:
           name: Run tests and generate coverage report
           command: |
-            ls
             source .venv/bin/activate
             mkdir -p test-results
             # Run pytest under coverage, generating a JUnit XML test report
