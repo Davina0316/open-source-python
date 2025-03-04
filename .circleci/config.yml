@@ -16,6 +16,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install uv
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+      - run:
           name: Create and install dependencies
           command: |
             python -m venv venv
