@@ -19,14 +19,12 @@ jobs:
           name: Install uv
           command: |
             curl -LsSf https://astral.sh/uv/install.sh | sh
-            uv tool run ruff check src
       - run:
           name: Create and install dependencies
           command: |
-            python -m venv venv
-            source venv/bin/activate
-            # Installs everything needed for lint, type-check & testing
-            pip install -r requirements.txt
+            uv venv --python 3.11
+            .venv\Scripts\activate
+            uv pip install -r requirements.txt
       - persist_to_workspace:
           # Save the venv and all source code into a workspace
           root: .
@@ -44,7 +42,7 @@ jobs:
       - run:
           name: Run lint (Ruff)
           command: |
-            source venv/bin/activate
+            .venv\Scripts\activate
             ruff check src
 
   type-check:
@@ -55,7 +53,7 @@ jobs:
       - run:
           name: Run type checking (mypy)
           command: |
-            source venv/bin/activate
+            .venv\Scripts\activate
             mypy src
 
   test:
@@ -66,7 +64,7 @@ jobs:
       - run:
           name: Run tests and generate coverage report
           command: |
-            source venv/bin/activate
+            .venv\Scripts\activate
             mkdir -p test-results
             # Run pytest under coverage, generating a JUnit XML test report
             coverage run --source=src -m pytest tests \

@@ -29,7 +29,7 @@ pip install uv
 ```
 ### **4. Create virtual environment using uv**
 ```bash
-uv venv
+uv venv --python 3.11
 ```
 
 ### **5. Activate virtual environment**
@@ -37,12 +37,7 @@ uv venv
 .venv\Scripts\activate
 ```
 
-### **6. Install Python 3.11 using uv**
-```bash
-uv venv --python 3.11
-```
-
-### **7. Install Project Dependencies**
+### **6. Install Project Dependencies**
 ```bash
 uv pip install -r requirements.txt
 ```
