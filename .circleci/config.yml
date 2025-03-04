@@ -3,29 +3,93 @@ version: 2.1
 executors:
   python-executor:
     docker:
-      - image: circleci/python:3.11
+      - image: cimg/python:3.11
     working_directory: ~/repo
 
 jobs:
-  test:
+  # 1) SETUP JOB
+  #    - Checks out code
+  #    - Creates & populates venv
+  #    - Persists venv in a workspace so other jobs can reuse it
+  setup:
     executor: python-executor
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Create and install dependencies
           command: |
             python -m venv venv
             source venv/bin/activate
+            # Installs everything needed for lint, type-check & testing
             pip install -r requirements.txt
+      - persist_to_workspace:
+          # Save the venv and all source code into a workspace
+          root: .
+          paths:
+            - venv
+            - src
+            - tests
+            # If your repo structure has other dirs/files you need, list them too.
+
+  lint:
+    executor: python-executor
+    steps:
+      - attach_workspace:
+          at: .
       - run:
-          name: Run static analysis (ruff)
+          name: Run lint (Ruff)
           command: |
             source venv/bin/activate
             ruff check src
+
+  type-check:
+    executor: python-executor
+    steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Run type checking (mypy)
           command: |
             source venv/bin/activate
             mypy src
+
+  test:
+    executor: python-executor
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests and generate coverage report
+          command: |
+            source venv/bin/activate
+            mkdir -p test-results
+            # Run pytest under coverage, generating a JUnit XML test report
+            coverage run --source=src -m pytest tests --junitxml=test-results/results.xml
+            # Generate a coverage.xml and html report
+            coverage xml
+            coverage html -d coverage_html
+            # Print coverage summary in the CircleCI logs
+            coverage report -m
       - store_test_results:
           path: test-results
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage-report
+      - store_artifacts:
+          path: coverage_html
+          destination: coverage-html
+
+workflows:
+  build_and_test:
+    jobs:
+      - setup
+      - lint:
+          requires:
+            - setup
+      - type-check:
+          requires:
+            - setup
+      - test:
+          requires:
+            - lint
+            - type-check
