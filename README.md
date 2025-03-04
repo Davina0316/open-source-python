@@ -15,7 +15,7 @@ This repository serves as a Python project template for **CS-GY 9223 Open Source
 
 ### **1. Clone the Repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/Davina0316/open-source-python.git
 ```
 
 ### **2. Navigate to the Project Directory**
@@ -27,8 +27,22 @@ cd open-source-python
 ```bash
 pip install uv
 ```
+### **4. Create virtual environment using uv**
+```bash
+uv venv
+```
 
-### **4. Install Project Dependencies**
+### **5. Activate virtual environment**
+```bash
+.venv\Scripts\activate
+```
+
+### **6. Install Python 3.11 using uv**
+```bash
+uv venv --python 3.11
+```
+
+### **7. Install Project Dependencies**
 ```bash
 uv pip install -r requirements.txt
 ```
@@ -36,11 +50,9 @@ uv pip install -r requirements.txt
 ## Running the Application
 To run the application, use:
 ```bash
-python src/main.py
+uv run python script.py
 ```
-
-Replace src/main.py with the actual entry point of your project.
-
+Please replace 'script.py'with the actual file you wish to run.
 
 ## Testing
 To run tests, execute:

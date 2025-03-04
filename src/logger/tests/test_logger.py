@@ -1,5 +1,6 @@
 from src.logger.logger import Logger
 
+
 def test_logger():
     logger = Logger()
     logger.log("5 + 3", 8)

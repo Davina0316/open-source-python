@@ -1,5 +1,6 @@
 from src.notifier.notifier import Notifier
 
+
 def test_notifier():
     notifier = Notifier(threshold=10)
     notifier.notify(15)
