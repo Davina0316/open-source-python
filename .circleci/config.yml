@@ -24,7 +24,8 @@ jobs:
           command: |
             uv venv --python 3.11
             source .venv/bin/activate
-            uv pip install -r requirements.txt
+            # uv pip install -r requirements.txt
+            uv sync
       - persist_to_workspace:
           # Save the venv and all source code into a workspace
           root: .
