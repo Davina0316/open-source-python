@@ -1,3 +1,36 @@
+[project]
+name = "opsd-project"
+version = "0.1.0"
+description = "OPSD python project"
+readme = "README.md"
+requires-python = ">=3.11"
+ddependencies = [
+    "colorama==0.4.6",
+    "coverage==7.6.12",
+    "iniconfig==2.0.0",
+    "jinja2==3.1.5",
+    "markupsafe==3.0.2",
+    "mypy==1.15.0",
+    "mypy-extensions==1.0.0",
+    "packaging==24.2",
+    "pluggy==1.5.0",
+    "pytest==8.3.5",
+    "pytest-cov==6.0.0",
+    "pytest-html==4.1.1",
+    "pytest-metadata==3.1.1",
+    "ruff==0.9.9",
+    "typing-extensions==4.12.2",
+]
+
+
+[project.scripts]
+opsd-project = "opsd_project:main"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
 [tool.ruff]
 line-length = 100
 select = ["ALL"]  # Enable all rules in Ruff
