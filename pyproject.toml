@@ -58,3 +58,6 @@ warn_return_any = true  # Warn if a function returns `Any`
 warn_unused_configs = true  # Warn about unused mypy configurations
 
 ignore_missing_imports = true  # Ignore missing imports (some external libraries may lack type hints)
+
+[tool.uv.workspace]
+members = ["src/calculator/calculator", "src/calculator_component", "src/logger_component", "src/notifier_component"]
