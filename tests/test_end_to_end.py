@@ -1,6 +1,6 @@
-from src.calculator.calculator import Calculator
-from src.logger.logger import Logger
-from src.notifier.notifier import Notifier
+from src.calculator_component.main import Calculator
+from src.logger_component.main import Logger
+from src.notifier_component.main import Notifier
 
 def test_end_to_end():
     calculator = Calculator()
