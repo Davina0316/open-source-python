@@ -2,6 +2,23 @@ version = 1
 revision = 1
 requires-python = ">=3.11"
 
+[manifest]
+members = [
+    "calculator-component",
+    "opsd-project",
+]
+
+[[package]]
+name = "calculator-component"
+version = "0.1.0"
+source = { virtual = "src/calculator_component" }
+dependencies = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pytest", specifier = ">=8.3.5" }]
+
 [[package]]
 name = "colorama"
 version = "0.4.6"

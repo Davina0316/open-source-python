@@ -45,9 +45,9 @@ uv pip install -r requirements.txt
 ## Running the Application
 To run the application, use:
 ```bash
-uv run python src\calculator\calculator\calculator_impl.py
-uv run python src\logger\logger\logger_impl.py
-uv run python src\notifier\notifier\notifier_impl.py
+uv run python src\calculator_component\main.py
+uv run python src\logger_component\main.py
+uv run python src\notifier_component\main.py
 ```
 
 
