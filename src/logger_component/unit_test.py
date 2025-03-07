@@ -1,4 +1,4 @@
-from main import Logger
+from .main import Logger
 
 
 def test_logger():

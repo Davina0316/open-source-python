@@ -1,4 +1,4 @@
-from main import Notifier
+from .main import Notifier
 
 
 def test_notifier():
