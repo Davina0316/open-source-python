@@ -39,7 +39,7 @@ uv venv --python 3.11
 
 ### **6. Install Project Dependencies**
 ```bash
-uv pip install -r requirements.txt
+uv sync
 ```
 
 ## Running the Application
