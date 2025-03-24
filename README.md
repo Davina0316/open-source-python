@@ -25,8 +25,9 @@ cd open-source-python
 
 ### **3. Install uv (if not already installed)**
 ```bash
-pip install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+Or any other way that works for you. Refer to [install uv](https://docs.astral.sh/uv/getting-started/installation/).
 ### **4. Create virtual environment using uv**
 ```bash
 uv venv --python 3.11
