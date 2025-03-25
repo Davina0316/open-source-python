@@ -15,3 +15,6 @@ def test_subtract(calculator):
 
 def test_multiply(calculator):
     assert calculator.multiply(3, 5) == 15
+
+def test_add_2(calculator):
+    assert calculator.add(2, 5) == 9
