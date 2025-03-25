@@ -67,7 +67,7 @@ jobs:
             source .venv/bin/activate
             mkdir -p test-results
             # Run pytest under coverage, generating a JUnit XML test report
-            coverage run --source=src -m pytest tests \
+            coverage run --source=src -m pytest \
               --junitxml=test-results/results.xml \
               --html=test-results/report.html \
               --self-contained-html
