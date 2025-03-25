@@ -66,16 +66,25 @@ jobs:
           command: |
             source .venv/bin/activate
             mkdir -p test-results
+
             # Run pytest under coverage, generating a JUnit XML test report
+            set +e
+
             coverage run --source=src -m pytest \
               --junitxml=test-results/results.xml \
               --html=test-results/report.html \
               --self-contained-html
+
+            TEST_EXIT_CODE=$?
+
             # Generate a coverage.xml and html report
             coverage xml
             coverage html -d coverage_html
+            
             # Print coverage summary in the CircleCI logs
             coverage report -m
+
+            set -e
       - store_test_results:
           path: test-results
       - store_artifacts:
