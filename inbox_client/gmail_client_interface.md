@@ -1,7 +1,21 @@
 # Gmail Client Interface
-This interface defines the behaviour of the Gmail Client, including how the client should connect/disconnect to Gmail, and the functionalities of the client such as reading, sending, deleting, and marking emails.
+This interface defines the behaviour of the Gmail Client, including how the client should connect/disconnect to Gmail, and the functionalities of the client such as reading, sending, deleting, and marking emails. This Gmail Client will later be intergrated with other teams' project such as AI Converstion Client, Chat Client or Issue Tracker Client.
 
 ---
+
+## Scope of Project
+This project is to develop a gmail client that can perform the following actions:
+- Connect to gmail server.
+- Login/Logout using address and password provided by user.
+- Authenticate itself with OAuth token.
+- Send email.
+- Select a mailbox from a list of mailboxes, get the emails in the mailbox, mark them as read or delete them.
+
+Example of some **out-of-scope** functionalities are:
+- Replying emails.
+- Mark emails as spam.
+- Unsubscribe email promos.
+- ...
 
 ## Interface Definition
 
