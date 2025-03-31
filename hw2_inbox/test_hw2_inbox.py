@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import create_autospec
 from typing import List, Dict, Any
 
-from inbox_client.gmail_client_interface import GmailClientInterface
+from .gmail_client_interface import GmailClientInterface
 
 class TestGmailClientInterface(unittest.TestCase):
     def setUp(self):
