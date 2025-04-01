@@ -4,4 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "coverage>=7.6.12",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "ruff>=0.9.9",
+    "uv>=0.6.11",
+]
