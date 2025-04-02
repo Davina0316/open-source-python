@@ -26,6 +26,7 @@ ignore = [
     "D100",  # Ignore missing module-level docstring (not always necessary in small projects)
     "D103",  # Ignore missing function docstring (test functions should be self-explanatory)
 ]
+exclude = ["**/unit_test.py"] # Ignore lint on unit_test files.
 
 [tool.ruff.lint]
 fixable = ["ALL"]  # Allow Ruff to auto-fix all issues
@@ -44,5 +45,3 @@ warn_return_any = true  # Warn if a function returns `Any`
 warn_unused_configs = true  # Warn about unused mypy configurations
 
 ignore_missing_imports = true  # Ignore missing imports (some external libraries may lack type hints)
-
-exclude = ["**/unit_test.py"] # Ignore lint on unit_test files.
