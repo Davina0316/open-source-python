@@ -13,7 +13,7 @@ members = [
 [[package]]
 name = "calculator-component"
 version = "0.1.0"
-source = { virtual = "src/calculator_component" }
+source = { editable = "src/calculator_component" }
 dependencies = [
     { name = "coverage" },
     { name = "mypy" },
@@ -118,7 +118,7 @@ wheels = [
 [[package]]
 name = "logger-component"
 version = "0.1.0"
-source = { virtual = "src/logger_component" }
+source = { editable = "src/logger_component" }
 dependencies = [
     { name = "coverage" },
     { name = "mypy" },
@@ -227,7 +227,7 @@ wheels = [
 [[package]]
 name = "notifier-component"
 version = "0.1.0"
-source = { virtual = "src/notifier_component" }
+source = { editable = "src/notifier_component" }
 dependencies = [
     { name = "coverage" },
     { name = "mypy" },

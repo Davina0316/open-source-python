@@ -1,6 +1,6 @@
-"""
-The `logger_component` package provides a Logger class for logging
-operations performed by the calculator. It supports logging the operation
+"""The `logger_component` package provides a Logger class for logging operations performed by the calculator.
+
+It supports logging the operation
 details and retrieving all the logs.
 
 Usage:
