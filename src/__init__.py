@@ -1,14 +1,11 @@
 """Doc string."""
 
-from .calculator_component import add, divide, multiply, subtract
-from .logger_component import OperationLogger
+from .calculator_component import Calculator
+from .logger_component import Logger
 from .notifier_component import Notifier
 
 __all__ = [
+    "Calculator",
+    "Logger",
     "Notifier",
-    "OperationLogger",
-    "add",
-    "divide",
-    "multiply",
-    "subtract",
 ]
