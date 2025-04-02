@@ -1,7 +1,7 @@
 [project]
 name = "calculator-component"
 version = "0.1.0"
-description = "Add your description here"
+description = "A calculator component that performs simple calculation"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
