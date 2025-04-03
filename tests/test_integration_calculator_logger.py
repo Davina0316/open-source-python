@@ -1,5 +1,5 @@
-from src.calculator_component.main import Calculator
-from src.logger_component.main import Logger
+from src.calculator_component import Calculator
+from src.logger_component import Logger
 from unittest.mock import Mock
 
 def test_calculator_logger():
