@@ -1,5 +1,4 @@
 from .main import Notifier
-import pytest
 
 
 def test_notifier() -> None:

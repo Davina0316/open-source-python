@@ -19,17 +19,18 @@ build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 line-length = 100
-select = ["ALL"]  # Enable all rules in Ruff
-ignore = [
-    "E501",  # Ignore line length issues (100 characters is already strict enough)
-    "ANN101", # Ignore missing type annotation for `self` (self and cls don't need type hints)
-    "D100",  # Ignore missing module-level docstring (not always necessary in small projects)
-    "D103",  # Ignore missing function docstring (test functions should be self-explanatory)
-]
-exclude = ["**/unit_test.py"] # Ignore lint on unit_test files.
 
 [tool.ruff.lint]
-fixable = ["ALL"]  # Allow Ruff to auto-fix all issues
+select = ["ALL"]
+ignore = [
+    "E501",
+    "ANN101",
+    "D100",
+    "D103"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*_test.py" = ["S101", "PLR2004"]
 
 [tool.mypy]
 strict = true  # Enable strict mode for type checking
