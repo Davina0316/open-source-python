@@ -2,7 +2,8 @@ from src.calculator_component import Calculator
 from src.logger_component import Logger
 from src.notifier_component import Notifier
 
-def test_end_to_end():
+
+def test_end_to_end() -> None:
     calculator = Calculator()
     logger = Logger()
     notifier = Notifier(threshold=10)
