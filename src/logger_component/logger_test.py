@@ -1,5 +1,5 @@
 from .main import Logger
-
+import pytest
 
 def test_logger():
     logger = Logger()
