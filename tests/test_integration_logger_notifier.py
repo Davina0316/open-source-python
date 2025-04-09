@@ -1,11 +1,10 @@
-from src.logger_component.main import Logger
-from src.notifier_component.main import Notifier
-from unittest.mock import Mock
+from src.logger_component import Logger
+from src.notifier_component import Notifier
 
-def test_logger_notifier():
+
+def test_logger_notifier() -> None:
     logger = Logger()
     notifier = Notifier(threshold=10)
-    mock_calculator = Mock()
 
     logger.log("5 * 3", 15)
     notifier.notify(15)
