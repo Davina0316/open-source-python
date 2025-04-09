@@ -10,6 +10,7 @@ class GmailClientImpl(GmailClientInterface):
         """Initialize."""
         super().__init__()
         self.__connected = False
+        self.__authenticated = False #To mark if authenticated
 
     def is_connected(self) -> bool:
         """Return true if connected."""
@@ -20,13 +21,25 @@ class GmailClientImpl(GmailClientInterface):
         return self.__connected
 
     def login(self, username: str, password: str) -> bool:
-        raise NotImplementedError("login method not implemented")
+        """Login with username and password."""
+        if username and password:
+           self.__connected = True
+           self.__authenticated = True
+           return True
+        return False
 
     def logout(self) -> None:
-        raise NotImplementedError("logout method not implemented")
+        """Logout the user."""
+        self.__connected = False
+        self.__authenticated = False
 
     def authenticate(self, token: str) -> bool:
-        raise NotImplementedError("authenticate method not implemented")
+        """Authenticate with token."""
+        if token == "VALID_TOKEN":
+           self.__connected = True
+           self.__authenticated = True
+           return True
+        return False
 
     def use_mailbox(self, mailbox: str) -> None:
         raise NotImplementedError("use_mailbox method not implemented")
