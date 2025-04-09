@@ -11,6 +11,19 @@ class GmailClientImpl(GmailClientInterface):
         super().__init__()
         self.__connected = False
         self.__authenticated = False #To mark if authenticated
+        self.__current_user = None
+
+        #Test user name, password database
+        self.__users = {
+            "alice": "password123",
+            "bob": "123456"
+        }
+
+        #Test token database
+        self.__valid_tokens = {
+            "alice": "TOKEN123",
+            "bob": "TOKEN456"
+        }
 
     def is_connected(self) -> bool:
         """Return true if connected."""
@@ -22,23 +35,31 @@ class GmailClientImpl(GmailClientInterface):
 
     def login(self, username: str, password: str) -> bool:
         """Login with username and password."""
-        if username and password:
-           self.__connected = True
-           self.__authenticated = True
-           return True
+        if not self.__connected:
+            return False
+        if username in self.__users and self.__users[username] == password:
+            self.__authenticated = True
+            self.__current_user = username
+            return True
         return False
 
     def logout(self) -> None:
         """Logout the user."""
         self.__connected = False
         self.__authenticated = False
+        self.__current_user = None
 
     def authenticate(self, token: str) -> bool:
         """Authenticate with token."""
-        if token == "VALID_TOKEN":
-           self.__connected = True
-           self.__authenticated = True
-           return True
+        if token in self.__valid_tokens.values():
+            self.__connected = True
+            self.__authenticated = True
+            #Finding corresponding user
+            for user, user_token in self.__valid_tokens.items():
+                if user_token == token:
+                    self.__current_user = user
+                    break
+            return True
         return False
 
     def use_mailbox(self, mailbox: str) -> None:

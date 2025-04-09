@@ -34,3 +34,29 @@ def test_logout(client: GmailClientImpl):
     client.logout()
     assert not client.is_connected()
 
+def test_connect_then_login_success(client: GmailClientImpl):
+    assert client.connect()
+    assert client.login("alice", "password123")
+    assert client.is_connected()
+
+def test_login_failure_wrong_password(client: GmailClientImpl):
+    client.connect()
+    assert not client.login("alice", "wrongpassword")
+
+def test_login_failure_not_connected(client: GmailClientImpl):
+    assert not client.login("alice", "password123")
+
+def test_authenticate_success(client: GmailClientImpl):
+    assert client.authenticate("TOKEN123")
+    assert client.is_connected()
+
+def test_authenticate_failure(client: GmailClientImpl):
+    assert not client.authenticate("INVALID_TOKEN")
+
+def test_logout_clears_state(client: GmailClientImpl):
+    client.connect()
+    client.login("bob", "123456")
+    assert client.is_connected()
+    client.logout()
+    assert not client.is_connected()
+    assert client._GmailClientImpl__current_user is None
