@@ -1,10 +1,12 @@
 """Implementation of the Gmail interface."""
 
-from . import GmailClientInterface
 from pathlib import Path
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
+
+from . import GmailClientInterface
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
@@ -22,13 +24,13 @@ class GmailClientImpl(GmailClientInterface):
         #Test user name, password database
         self.__users = {
             "alice": "password123",
-            "bob": "123456"
+            "bob": "123456",
         }
 
         #Test token database
         self.__valid_tokens = {
             "alice": "TOKEN123",
-            "bob": "TOKEN456"
+            "bob": "TOKEN456",
         }
 
     def is_connected(self) -> bool:
@@ -56,11 +58,11 @@ class GmailClientImpl(GmailClientInterface):
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    credentials_path, SCOPES
+                    credentials_path, SCOPES,
                 )
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open(token_path, "w") as token:
+            with token_path.open("w") as token:
                token.write(creds.to_json())
         self.__connected = True
         return self.__connected
