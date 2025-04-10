@@ -5,6 +5,10 @@ description = "OPSD python project"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "coverage==7.6.12",
+    "google-api-python-client>=2.166.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.2.1",
     "iniconfig==2.0.0",
     "markupsafe==3.0.2",
     "packaging==24.2",

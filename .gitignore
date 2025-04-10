@@ -174,5 +174,7 @@ cython_debug/
 .ruff_cache
 
 .vscode
+credentials.json
+token.json
 
 .DS_Store

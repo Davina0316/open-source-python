@@ -17,6 +17,10 @@ class GmailClientInterface(ABC):
     """
 
     @abstractmethod
+    def is_connected(self) -> bool:
+        """Return true if current status is connected."""
+
+    @abstractmethod
     def connect(self) -> bool:
         """Establish a connection to the Gmail server or service.
         
