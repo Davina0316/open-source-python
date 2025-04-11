@@ -51,7 +51,7 @@ class TestGmailClientInterface:
     def test_get_emails_list(self, mock_client: Mock) -> None:
         emails: List[Dict[str, Any]] = [
             {"id": "1", "subject": "Hello", "sender": "a@example.com", "snippet": "Hi there"},
-            {"id": "2", "subject": "World", "sender": "b@example.com", "snippet": "Greetings"}
+            {"id": "2", "subject": "World", "sender": "b@example.com", "snippet": "Greetings"},
         ]
         mock_client.get_emails_list.return_value = emails
         result = mock_client.get_emails_list()

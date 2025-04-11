@@ -23,7 +23,7 @@ class GmailClientInterface(ABC):
     @abstractmethod
     def connect(self) -> bool:
         """Establish a connection to the Gmail server or service.
-        
+
         Returns:
             bool: True if connection is successful, False otherwise.
 
@@ -32,11 +32,11 @@ class GmailClientInterface(ABC):
     @abstractmethod
     def login(self, username: str, password: str) -> bool:
         """Login to the Gmail account using username and password.
-        
+
         Args:
             username (str): User's email address.
             password (str): User's password.
-        
+
         Returns:
             bool: True if login is successful, False otherwise.
 
@@ -45,11 +45,11 @@ class GmailClientInterface(ABC):
     @abstractmethod
     def authenticate(self, username: str, access_token: str) -> bool:
         """Authenticate using OAuth token instead of password.
-        
+
         Args:
             username (str): User's email address.
             access_token (str): OAuth access token.
-        
+
         Returns:
             bool: True if authentication is successful, False otherwise.
 
@@ -62,7 +62,7 @@ class GmailClientInterface(ABC):
     @abstractmethod
     def fetch_mailboxes(self) -> list[str]:
         """Retrieve a list of available mailboxes/labels.
-        
+
         Returns:
             List[str]: List of mailbox names.
 
@@ -71,16 +71,14 @@ class GmailClientInterface(ABC):
     @abstractmethod
     def use_mailbox(self, mailbox: str) -> bool:
         """Select the mailbox to operate on.
-        
+
         Args:
             mailbox (str): The name of the mailbox to use.
-        
+
         Returns:
             bool: True if mailbox was selected successfully, False otherwise.
 
         """
-
-
 
     @abstractmethod
     def get_emails_list(self) -> list[dict[str, Any]]:
@@ -104,10 +102,6 @@ class GmailClientInterface(ABC):
             Dict[str, Any]: Dictionary containing detailed email content.
 
         """
-
-
-
-
 
     @abstractmethod
     def send_email(self, to: str, subject: str, body: str) -> bool:

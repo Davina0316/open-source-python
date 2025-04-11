@@ -1,10 +1,9 @@
-
 class Logger:
     """Logs operations performed by the calculator."""
 
     def __init__(self) -> None:
         """Doc string."""
-        self.logs:list[str] = []
+        self.logs: list[str] = []
 
     def log(self, operation: str, result: float) -> None:
         """Log an operation with its result."""
