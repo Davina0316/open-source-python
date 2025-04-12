@@ -78,7 +78,7 @@ class GmailClientImpl(GmailClientInterface):
             self.__creds = service_account.Credentials.from_service_account_info(
                 key_info,
                 scopes=SCOPES,
-            )
+            ) # type: ignore[no-untyped-call]
             self.__service = build("gmail", "v1", credentials=self.__creds)
         except json.JSONDecodeError:
             logging.exception("Failed to parse GMAIL_SERVICE_ACCOUNT_KEY_JSON.")
@@ -114,7 +114,7 @@ class GmailClientImpl(GmailClientInterface):
                 if self.__creds and self.__creds.expired and self.__creds.refresh_token:
                     self.__creds.refresh(Request()) # type: ignore[no-untyped-call]
                     with token_path.open("w") as token:
-                        token.write(self.__creds.to_json()) # type: ignore[no-untyped-call]
+                        token.write(self.__creds.to_json())
                 elif credentials_path.exists(): # Only run flow if credentials file exists
                     flow = InstalledAppFlow.from_client_secrets_file(
                         str(credentials_path),
