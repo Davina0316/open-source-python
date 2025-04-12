@@ -6,13 +6,13 @@ import logging
 from base64 import urlsafe_b64encode
 from email.mime.text import MIMEText
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Dict, List
 
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 
 from . import GmailClientInterface
@@ -24,6 +24,12 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.modify",
 ]
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
 
 class GmailClientImpl(GmailClientInterface):
     """Implement the GmailClientInterface."""
@@ -31,21 +37,21 @@ class GmailClientImpl(GmailClientInterface):
     def __init__(self) -> None:
         """Initialize."""
         super().__init__()
-        self.__connected = False
-        self.__authenticated = False
-        self.__current_user = None
-        self.__current_mailbox = None
-        self.__service = None
-        self.__creds = None
+        self.__connected: bool = False
+        self.__authenticated: bool = False
+        self.__current_user: Optional[str] = None
+        self.__current_mailbox: Optional[str] = None
+        self.__service: Optional[Resource] = None
+        self.__creds: Optional[Credentials] = None
 
         # Test user name, password database
-        self.__users = {
+        self.__users: Dict[str, str] = {
             "alice": "password123",
             "bob": "123456",
         }
 
         # Test token database
-        self.__valid_tokens = {
+        self.__valid_tokens: Dict[str, str] = {
             "alice": "TOKEN123",
             "bob": "TOKEN456",
         }
@@ -62,36 +68,50 @@ class GmailClientImpl(GmailClientInterface):
             credentials_path = root_dir / "hw2_inbox" / "resources" / "credentials.json"
 
             if token_path.exists():
-                self.__creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
+                self.__creds = Credentials.from_authorized_user_file(str(token_path), SCOPES) # type: ignore[no-untyped-call]
 
-            if not self.__creds or not self.__creds.valid:
+            # Check if credentials need to be refreshed or obtained
+            if self.__creds is None or not self.__creds.valid:
                 if self.__creds and self.__creds.expired and self.__creds.refresh_token:
-                    self.__creds.refresh(Request())
+                    self.__creds.refresh(Request()) # type: ignore[no-untyped-call]
+                    # Save the refreshed credentials
                     with token_path.open("w") as token:
-                        token.write(self.__creds.to_json())
+                        token.write(self.__creds.to_json()) # type: ignore[no-untyped-call]
                 else:
+                    # No valid credentials, initiate OAuth flow
                     flow = InstalledAppFlow.from_client_secrets_file(
                         str(credentials_path),
                         SCOPES,
                     )
-                    self.__creds = flow.run_local_server(port=0)
-                    with token_path.open("w") as token:
-                        token.write(self.__creds.to_json())
+                    new_creds = flow.run_local_server(port=0)
+                    if new_creds:
+                        self.__creds = new_creds
+                        # Save the new credentials (Moved inside the 'if' block)
+                        with token_path.open("w") as token:
+                            token.write(self.__creds.to_json()) # type: ignore[union-attr]
+                    else:
+                        # Handle case where flow failed unexpectedly without raising
+                        logging.error("OAuth flow did not return credentials.")
+                        raise RuntimeError("OAuth flow failed to return credentials")
 
+
+            # Build the Gmail service object
             self.__service = build("gmail", "v1", credentials=self.__creds)
-        except (OSError, RefreshError, HttpError):
-            logging.exception("Connection/Authentication failed")
+
+        except (OSError, RefreshError, HttpError, RuntimeError) as e: # Added RuntimeError
+            logging.exception(f"Connection/Authentication failed: {e}")
             self.__service = None
             self.__connected = False
             self.__authenticated = False
             return False
-        except Exception:
-            logging.exception("An unexpected error occurred during connect")
+        except Exception as e:
+            logging.exception(f"An unexpected error occurred during connect: {e}")
             self.__service = None
             self.__connected = False
             self.__authenticated = False
             return False
         else:
+            # Connection successful
             self.__connected = True
             return True
 
@@ -254,8 +274,6 @@ class GmailClientImpl(GmailClientInterface):
         except Exception:
             logging.exception("An unexpected error occurred in get_emails_list")
             return []
-        else:
-            return email_list
 
     def _parse_email_headers(self, headers: list[dict[str, str]]) -> dict[str, str]:
         """Parse relevant fields from email headers."""
@@ -331,6 +349,7 @@ class GmailClientImpl(GmailClientInterface):
                 "to": parsed_headers["to"],
                 "body": body,
             }
+            return email_content
 
         except HttpError:
             logging.exception("Failed to get email content for ID '%s'", email_id)
@@ -338,8 +357,6 @@ class GmailClientImpl(GmailClientInterface):
         except Exception:
             logging.exception("An unexpected error occurred in get_email_content")
             return {}
-        else:
-            return email_content
 
     def send_email(self, to: str, subject: str, body: str) -> bool:
         """Send an email to the specified recipient."""
@@ -367,8 +384,6 @@ class GmailClientImpl(GmailClientInterface):
         except Exception:
             logging.exception("An unexpected error occurred in send_email")
             return False
-        else:
-            return True
 
     def delete_email(self, email_id: str) -> bool:
         """Delete an email by its ID."""
@@ -387,8 +402,6 @@ class GmailClientImpl(GmailClientInterface):
         except Exception:
             logging.exception("An unexpected error occurred in delete_email")
             return False
-        else:
-            return True
 
     def mark_as_read(self, email_id: str) -> bool:
         """Mark an email as read."""
@@ -408,5 +421,3 @@ class GmailClientImpl(GmailClientInterface):
         except Exception:
             logging.exception("An unexpected error occurred in mark_as_read")
             return False
-        else:
-            return True

@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 @pytest.fixture
-def client() -> GmailClientInterface:
+def client() -> GmailClientImpl:
     return GmailClientImpl()
 
 
@@ -20,8 +20,8 @@ def client() -> GmailClientInterface:
 @patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file")  # mock_flow_factory
 @patch("hw2_inbox.main.build")  # mock_build
 def test_should_connect_with_new_credentials(
-    mock_build, mock_flow_factory, mock_path_open, mock_path_exists, client: GmailClientInterface
-):
+    mock_build: MagicMock, mock_flow_factory: MagicMock, mock_path_open: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock flow
     mock_flow = MagicMock()
     mock_creds = MagicMock(spec=Credentials, valid=True)
@@ -57,13 +57,13 @@ def test_should_connect_with_new_credentials(
 @patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file")  # mock_flow_factory
 @patch("hw2_inbox.main.build")  # mock_build
 def test_should_connect_with_valid_token(
-    mock_build,
-    mock_flow_factory,
-    mock_file_open,
-    mock_creds_from_file,
-    mock_path_exists,
-    client: GmailClientInterface,
-):
+    mock_build: MagicMock,
+    mock_flow_factory: MagicMock,
+    mock_file_open: MagicMock,
+    mock_creds_from_file: MagicMock,
+    mock_path_exists: MagicMock,
+    client: GmailClientImpl,
+) -> None:
     # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -87,13 +87,13 @@ def test_should_connect_with_valid_token(
 @patch("hw2_inbox.main.Path.exists", return_value=True)  # mock_file_exists
 @patch("hw2_inbox.main.build")  # mock_build
 def test_should_refresh_token_if_expired(
-    mock_build,
-    mock_file_exists,
-    mock_creds_from_file,
-    mock_path_open,
-    mock_flow_factory,
-    client: GmailClientInterface,
-):
+    mock_build: MagicMock,
+    mock_file_exists: MagicMock,
+    mock_creds_from_file: MagicMock,
+    mock_path_open: MagicMock,
+    mock_flow_factory: MagicMock,
+    client: GmailClientImpl,
+) -> None:
     # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=False, expired=True, refresh_token="123")
     mock_creds.to_json.return_value = '{"token": "refreshed_token", "refresh_token": "123", "client_id": "test_client_id", "client_secret": "test_client_secret"}'
@@ -124,7 +124,7 @@ def test_should_refresh_token_if_expired(
 @patch("hw2_inbox.main.Path.exists", return_value=True)  # Assume token.json exists
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")  # Mock reading token
 @patch("hw2_inbox.main.build")  # Mock service build
-def test_login_success(mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl):
+def test_login_success(mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -141,7 +141,7 @@ def test_login_success(mock_build, mock_creds_from_file, mock_path_exists, clien
     mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
 
 
-def test_login_failure(client: GmailClientImpl):
+def test_login_failure(client: GmailClientImpl) -> None:
     # Mock connect to avoid actual OAuth flow
     with patch.object(client, "connect", return_value=True):
         assert not client.login("", "")
@@ -152,8 +152,8 @@ def test_login_failure(client: GmailClientImpl):
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_authenticate_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -170,7 +170,7 @@ def test_authenticate_success(
     mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
 
 
-def test_authenticate_failure(client: GmailClientImpl):
+def test_authenticate_failure(client: GmailClientImpl) -> None:
     assert not client.authenticate("invalid", "INVALID_TOKEN")
     assert not client.is_connected()
 
@@ -178,7 +178,7 @@ def test_authenticate_failure(client: GmailClientImpl):
 @patch("hw2_inbox.main.Path.exists", return_value=True)
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
-def test_logout(mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl):
+def test_logout(mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -193,18 +193,18 @@ def test_logout(mock_build, mock_creds_from_file, mock_path_exists, client: Gmai
 
     client.logout()
     assert not client.is_connected()
-    assert client._GmailClientImpl__service is None
-    assert client._GmailClientImpl__creds is None
-    assert client._GmailClientImpl__current_user is None
-    assert not client._GmailClientImpl__authenticated
+    assert client._GmailClientImpl__service is None  # type: ignore[attr-defined]
+    assert client._GmailClientImpl__creds is None # type: ignore[attr-defined]
+    assert client._GmailClientImpl__current_user is None # type: ignore[attr-defined]
+    assert not client._GmailClientImpl__authenticated # type: ignore[attr-defined]
 
 
 @patch("hw2_inbox.main.Path.exists", return_value=True)
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_connect_then_login_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=True)
     mock_creds_from_file.return_value = mock_creds
@@ -222,8 +222,8 @@ def test_connect_then_login_success(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_login_failure_wrong_password(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=True)
     mock_creds_from_file.return_value = mock_creds
@@ -240,8 +240,8 @@ def test_login_failure_wrong_password(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_logout_clears_state(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=True)
     mock_creds_from_file.return_value = mock_creds
@@ -255,15 +255,15 @@ def test_logout_clears_state(
     assert client.is_connected()
     client.logout()
     assert not client.is_connected()
-    assert client._GmailClientImpl__current_user is None
+    assert client._GmailClientImpl__current_user is None # type: ignore[attr-defined]
 
 
 @patch("hw2_inbox.main.Path.exists", return_value=True)
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_use_mailbox_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -288,7 +288,7 @@ def test_use_mailbox_success(
 
     # Test use_mailbox
     assert client.use_mailbox("INBOX")
-    assert client._GmailClientImpl__current_mailbox == "INBOX"
+    assert client._GmailClientImpl__current_mailbox == "INBOX" # type: ignore[attr-defined]
     mock_labels.list.assert_called_once()
 
 
@@ -296,8 +296,8 @@ def test_use_mailbox_success(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_use_mailbox_failure_invalid_mailbox(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -322,7 +322,7 @@ def test_use_mailbox_failure_invalid_mailbox(
 
     # Test use_mailbox with invalid mailbox
     assert not client.use_mailbox("NONEXISTENT")
-    assert client._GmailClientImpl__current_mailbox is None
+    assert client._GmailClientImpl__current_mailbox is None # type: ignore[attr-defined]
     mock_labels.list.assert_called_once()
 
 
@@ -330,8 +330,8 @@ def test_use_mailbox_failure_invalid_mailbox(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_fetch_mailboxes_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -373,8 +373,8 @@ def test_fetch_mailboxes_success(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_get_emails_list_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -442,8 +442,8 @@ def test_get_emails_list_success(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_get_email_content_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -497,8 +497,8 @@ def test_get_email_content_success(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_send_email_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -530,8 +530,8 @@ def test_send_email_success(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_delete_email_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -563,8 +563,8 @@ def test_delete_email_success(
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_mark_as_read_success(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
@@ -594,7 +594,7 @@ def test_mark_as_read_success(
     )
 
 
-def test_operations_fail_when_not_authenticated(client: GmailClientImpl):
+def test_operations_fail_when_not_authenticated(client: GmailClientImpl) -> None:
     # Test all operations without authentication
     assert not client.use_mailbox("INBOX")
     assert client.fetch_mailboxes() == []
@@ -609,8 +609,8 @@ def test_operations_fail_when_not_authenticated(client: GmailClientImpl):
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_operations_handle_api_errors(
-    mock_build, mock_creds_from_file, mock_path_exists, client: GmailClientImpl
-):
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
     # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
