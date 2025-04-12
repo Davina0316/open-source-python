@@ -9,7 +9,6 @@ resolution-markers = [
 [manifest]
 members = [
     "calculator-component",
-    "hw2-inbox",
     "logger-component",
     "notifier-component",
     "opsd-project",
@@ -262,33 +261,6 @@ wheels = [
 ]
 
 [[package]]
-name = "hw2-inbox"
-version = "0.1.0"
-source = { editable = "hw2_inbox" }
-dependencies = [
-    { name = "coverage" },
-    { name = "google-api-python-client" },
-    { name = "google-auth-httplib2" },
-    { name = "google-auth-oauthlib" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "ruff" },
-    { name = "uv" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "coverage", specifier = ">=7.6.12" },
-    { name = "google-api-python-client", specifier = ">=2.166.0" },
-    { name = "google-auth-httplib2", specifier = ">=0.2.0" },
-    { name = "google-auth-oauthlib", specifier = ">=1.2.1" },
-    { name = "mypy", specifier = ">=1.15.0" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "ruff", specifier = ">=0.9.9" },
-    { name = "uv", specifier = ">=0.6.11" },
-]
-
-[[package]]
 name = "idna"
 version = "3.10"
 source = { registry = "https://pypi.org/simple" }
@@ -462,6 +434,7 @@ source = { editable = "." }
 dependencies = [
     { name = "coverage" },
     { name = "google-api-python-client" },
+    { name = "google-auth" },
     { name = "google-auth-httplib2" },
     { name = "google-auth-oauthlib" },
     { name = "iniconfig" },
@@ -483,6 +456,7 @@ dependencies = [
 requires-dist = [
     { name = "coverage", specifier = "==7.6.12" },
     { name = "google-api-python-client", specifier = ">=2.166.0" },
+    { name = "google-auth", specifier = ">=2.32.0" },
     { name = "google-auth-httplib2", specifier = ">=0.2.0" },
     { name = "google-auth-oauthlib", specifier = ">=1.2.1" },
     { name = "iniconfig", specifier = "==2.0.0" },

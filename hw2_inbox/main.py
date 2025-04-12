@@ -2,7 +2,9 @@
 
 import base64
 import binascii
+import json
 import logging
+import os
 from base64 import urlsafe_b64encode
 from email.mime.text import MIMEText
 from pathlib import Path
@@ -10,6 +12,7 @@ from typing import Any
 
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import Resource, build
@@ -60,25 +63,59 @@ class GmailClientImpl(GmailClientInterface):
         """Return true if connected."""
         return self.__connected and self.__service is not None
 
-    def connect(self) -> bool:
-        """Establish a connection to the Gmail server or service."""
+    def _connect_with_service_account(self) -> bool:
+        """Attempt connection using service account credentials from environment variables."""
+        service_account_key_json = os.environ.get("GMAIL_SERVICE_ACCOUNT_KEY_JSON")
+        if not service_account_key_json:
+            return False # No service account key found
+
+        logging.info("Attempting service account authentication from environment variable.")
+        try:
+            key_info = json.loads(service_account_key_json)
+            # Note: If using domain-wide delegation, you'll need to uncomment
+            # and set the 'subject' parameter below, and ensure the
+            # GMAIL_IMPERSONATED_USER environment variable is set in CircleCI.
+            self.__creds = service_account.Credentials.from_service_account_info(
+                key_info,
+                scopes=SCOPES,
+            )
+            self.__service = build("gmail", "v1", credentials=self.__creds)
+        except json.JSONDecodeError:
+            logging.exception("Failed to parse GMAIL_SERVICE_ACCOUNT_KEY_JSON.")
+            self.__service = None
+            self.__connected = False
+            return False
+        except Exception: # Catch potential issues loading credentials or building service
+            logging.exception("Service account authentication failed") # Fixed logging call
+            self.__service = None
+            self.__connected = False
+            return False
+        else:
+            self.__connected = True
+            logging.info("Service account authentication successful.")
+            return True
+
+    def _connect_with_oauth(self) -> bool:
+        """Attempt connection using local OAuth flow (token.json/credentials.json)."""
+        logging.info("Attempting local OAuth authentication (token/credentials files).")
         try:
             root_dir = Path(__file__).resolve().parent.parent
             token_path = root_dir / "hw2_inbox" / "token.json"
             credentials_path = root_dir / "hw2_inbox" / "resources" / "credentials.json"
 
+            # Initialize creds to None before checks
+            self.__creds = None
+
             if token_path.exists():
+                # Try loading from token file ONLY if it exists
                 self.__creds = Credentials.from_authorized_user_file(str(token_path), SCOPES) # type: ignore[no-untyped-call]
 
-            # Check if credentials need to be refreshed or obtained
             if self.__creds is None or not self.__creds.valid:
                 if self.__creds and self.__creds.expired and self.__creds.refresh_token:
                     self.__creds.refresh(Request()) # type: ignore[no-untyped-call]
-                    # Save the refreshed credentials
                     with token_path.open("w") as token:
                         token.write(self.__creds.to_json()) # type: ignore[no-untyped-call]
-                else:
-                    # No valid credentials, initiate OAuth flow
+                elif credentials_path.exists(): # Only run flow if credentials file exists
                     flow = InstalledAppFlow.from_client_secrets_file(
                         str(credentials_path),
                         SCOPES,
@@ -86,33 +123,53 @@ class GmailClientImpl(GmailClientInterface):
                     new_creds = flow.run_local_server(port=0)
                     if new_creds:
                         self.__creds = new_creds
-                        # Save the new credentials (Moved inside the 'if' block)
                         with token_path.open("w") as token:
                             token.write(self.__creds.to_json()) # type: ignore[union-attr]
                     else:
-                        # Handle case where flow failed unexpectedly without raising
                         self._handle_oauth_flow_failure()
-
+                else:
+                    # Cannot proceed if no token, no refresh token, and no credentials file
+                    logging.error("OAuth failed: No token.json, refresh_token, or credentials.json found.")
+                    return False
 
             # Build the Gmail service object
             self.__service = build("gmail", "v1", credentials=self.__creds)
 
-        except (OSError, RefreshError, HttpError, RuntimeError): # Added RuntimeError
-            logging.exception("Connection/Authentication failed")
+        except (OSError, RefreshError, HttpError, RuntimeError):
+            logging.exception("Local OAuth connection/authentication failed") # G004, TRY401 fixed
             self.__service = None
             self.__connected = False
-            self.__authenticated = False
+            self.__authenticated = False # Also reset auth state on failure
             return False
         except Exception:
-            logging.exception("An unexpected error occurred during connect")
+            logging.exception("An unexpected error occurred during local OAuth connect") # G004, TRY401 fixed
             self.__service = None
             self.__connected = False
-            self.__authenticated = False
+            self.__authenticated = False # Also reset auth state on failure
             return False
-        else:
-            # Connection successful
-            self.__connected = True
+        else: # TRY300 fixed
+            self.__connected = True # Mark as connected here after successful build
+            logging.info("Local OAuth authentication successful.")
             return True
+
+    def connect(self) -> bool:
+        """Establish a connection to the Gmail service, trying Service Account then OAuth."""
+        # Reset state before attempting connection
+        self.__service = None
+        self.__creds = None
+        self.__connected = False
+
+        # Try Service Account first (suitable for CI)
+        if self._connect_with_service_account():
+            return True
+
+        # Fallback to OAuth (suitable for local development)
+        if self._connect_with_oauth():
+            return True
+
+        # If both failed
+        logging.error("Failed to connect using both service account and OAuth methods.")
+        return False
 
     def _handle_oauth_flow_failure(self) -> None:
         """Handle the specific case where OAuth flow fails to return credentials."""

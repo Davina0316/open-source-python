@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "coverage==7.6.12",
     "google-api-python-client>=2.166.0",
+    "google-auth>=2.32.0",
     "google-auth-httplib2>=0.2.0",
     "google-auth-oauthlib>=1.2.1",
     "iniconfig==2.0.0",
@@ -73,3 +74,9 @@ ignore_missing_imports = true  # Ignore missing imports (some external libraries
 
 [tool.uv.workspace]
 members = ["src/calculator/calculator", "src/calculator_component", "src/logger_component", "src/notifier_component"]
+[tool.mypy.overrides]
+module = [
+    "google_auth_oauthlib.*",
+    "googleapiclient.*"
+]
+ignore_missing_imports = true

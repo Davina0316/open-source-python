@@ -15,13 +15,18 @@ def client() -> GmailClientImpl:
     return GmailClientImpl()
 
 
-@patch("hw2_inbox.main.Path.exists", return_value=False)  # mock_path_exists
 @patch("pathlib.Path.open")  # mock_path_open (Use default MagicMock)
 @patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file")  # mock_flow_factory
 @patch("hw2_inbox.main.build")  # mock_build
+@patch("hw2_inbox.main.Path.exists") # <-- Revert to patching exists directly
 def test_should_connect_with_new_credentials(
-    mock_build: MagicMock, mock_flow_factory: MagicMock, mock_path_open: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+    mock_path_exists: MagicMock, mock_build: MagicMock, mock_flow_factory: MagicMock, mock_path_open: MagicMock, client: GmailClientImpl # <-- Change signature back
 ) -> None:
+    # Configure the mock Path.exists method with a side_effect list
+    # First call (token_path.exists) returns False
+    # Second call (credentials_path.exists) returns True
+    mock_path_exists.side_effect = [False, True]
+
     # Setup mock flow
     mock_flow = MagicMock()
     mock_creds = MagicMock(spec=Credentials, valid=True)
