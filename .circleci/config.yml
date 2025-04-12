@@ -58,6 +58,7 @@ jobs:
           command: |
             source .venv/bin/activate
             mypy src
+            which mypy
             mypy hw2_inbox
 
   test:
