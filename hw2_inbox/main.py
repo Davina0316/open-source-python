@@ -6,13 +6,13 @@ import logging
 from base64 import urlsafe_b64encode
 from email.mime.text import MIMEText
 from pathlib import Path
-from typing import Any, Optional, Dict, List
+from typing import Any
 
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build, Resource
+from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 
 from . import GmailClientInterface
@@ -39,19 +39,19 @@ class GmailClientImpl(GmailClientInterface):
         super().__init__()
         self.__connected: bool = False
         self.__authenticated: bool = False
-        self.__current_user: Optional[str] = None
-        self.__current_mailbox: Optional[str] = None
-        self.__service: Optional[Resource] = None
-        self.__creds: Optional[Credentials] = None
+        self.__current_user: str | None = None
+        self.__current_mailbox: str | None = None
+        self.__service: Resource | None = None
+        self.__creds: Credentials | None = None
 
         # Test user name, password database
-        self.__users: Dict[str, str] = {
+        self.__users: dict[str, str] = {
             "alice": "password123",
             "bob": "123456",
         }
 
         # Test token database
-        self.__valid_tokens: Dict[str, str] = {
+        self.__valid_tokens: dict[str, str] = {
             "alice": "TOKEN123",
             "bob": "TOKEN456",
         }
@@ -91,21 +91,20 @@ class GmailClientImpl(GmailClientInterface):
                             token.write(self.__creds.to_json()) # type: ignore[union-attr]
                     else:
                         # Handle case where flow failed unexpectedly without raising
-                        logging.error("OAuth flow did not return credentials.")
-                        raise RuntimeError("OAuth flow failed to return credentials")
+                        self._handle_oauth_flow_failure()
 
 
             # Build the Gmail service object
             self.__service = build("gmail", "v1", credentials=self.__creds)
 
-        except (OSError, RefreshError, HttpError, RuntimeError) as e: # Added RuntimeError
-            logging.exception(f"Connection/Authentication failed: {e}")
+        except (OSError, RefreshError, HttpError, RuntimeError): # Added RuntimeError
+            logging.exception("Connection/Authentication failed")
             self.__service = None
             self.__connected = False
             self.__authenticated = False
             return False
-        except Exception as e:
-            logging.exception(f"An unexpected error occurred during connect: {e}")
+        except Exception:
+            logging.exception("An unexpected error occurred during connect")
             self.__service = None
             self.__connected = False
             self.__authenticated = False
@@ -114,6 +113,13 @@ class GmailClientImpl(GmailClientInterface):
             # Connection successful
             self.__connected = True
             return True
+
+    def _handle_oauth_flow_failure(self) -> None:
+        """Handle the specific case where OAuth flow fails to return credentials."""
+        log_msg = "OAuth flow did not return credentials."
+        logging.error(log_msg)
+        error_msg = "OAuth flow failed to return credentials"
+        raise RuntimeError(error_msg)
 
     def login(self, username: str, password: str) -> bool:
         """Login with username and password."""
@@ -217,6 +223,7 @@ class GmailClientImpl(GmailClientInterface):
         if not self.__authenticated or not self.__service:
             return []
 
+        email_list: list[dict[str, Any]] = [] # Ensure type hint for initialization
         try:
             # Get messages in the mailbox
             results = (
@@ -231,49 +238,50 @@ class GmailClientImpl(GmailClientInterface):
             )
 
             messages = results.get("messages", [])
-            email_list = []
 
             if not messages:
-                return []
-
-            for msg in messages:
-                # Get the full message details
-                message = (
-                    self.__service.users()
-                    .messages()
-                    .get(
-                        userId="me",
-                        id=msg["id"],
-                        format="metadata",
-                        metadataHeaders=["From", "Subject"],
+                pass # Let it return the initialized empty list at the end
+            else:
+                for msg in messages:
+                    # Get the full message details
+                    message = (
+                        self.__service.users()
+                        .messages()
+                        .get(
+                            userId="me",
+                            id=msg["id"],
+                            format="metadata",
+                            metadataHeaders=["From", "Subject"],
+                        )
+                        .execute()
                     )
-                    .execute()
-                )
 
-                headers = message["payload"]["headers"]
-                email_data = {
-                    "id": msg["id"],
-                    "snippet": message.get("snippet", ""),
-                    "subject": "",
-                    "sender": "",
-                }
+                    headers = message["payload"]["headers"]
+                    email_data = {
+                        "id": msg["id"],
+                        "snippet": message.get("snippet", ""),
+                        "subject": "",
+                        "sender": "",
+                    }
 
-                # Extract subject and sender from headers
-                for header in headers:
-                    if header["name"] == "Subject":
-                        email_data["subject"] = header["value"]
-                    elif header["name"] == "From":
-                        email_data["sender"] = header["value"]
+                    # Extract subject and sender from headers
+                    for header in headers:
+                        if header["name"] == "Subject":
+                            email_data["subject"] = header["value"]
+                        elif header["name"] == "From":
+                            email_data["sender"] = header["value"]
 
-                email_list.append(email_data)
+                    email_list.append(email_data)
 
-            return email_list
         except HttpError:
             logging.exception("Failed to get email list for mailbox '%s'", mailbox)
-            return []
+            # Return initial empty list at the end
         except Exception:
             logging.exception("An unexpected error occurred in get_emails_list")
-            return []
+            # Return initial empty list at the end
+        # No else block needed, email_list is populated in try if successful
+
+        return email_list # Single return point
 
     def _parse_email_headers(self, headers: list[dict[str, str]]) -> dict[str, str]:
         """Parse relevant fields from email headers."""
@@ -341,7 +349,15 @@ class GmailClientImpl(GmailClientInterface):
             parsed_headers = self._parse_email_headers(headers)
             body = self._extract_email_body(payload)
 
-            email_content = {
+        except HttpError:
+            logging.exception("Failed to get email content for ID '%s'", email_id)
+            return {}
+        except Exception:
+            logging.exception("An unexpected error occurred in get_email_content")
+            return {}
+        else:
+            # Construct and return dictionary in the else block
+            return {
                 "id": email_id,
                 "subject": parsed_headers["subject"],
                 "sender": parsed_headers["sender"],
@@ -349,20 +365,13 @@ class GmailClientImpl(GmailClientInterface):
                 "to": parsed_headers["to"],
                 "body": body,
             }
-            return email_content
-
-        except HttpError:
-            logging.exception("Failed to get email content for ID '%s'", email_id)
-            return {}
-        except Exception:
-            logging.exception("An unexpected error occurred in get_email_content")
-            return {}
 
     def send_email(self, to: str, subject: str, body: str) -> bool:
         """Send an email to the specified recipient."""
         if not self.__authenticated or not self.__service:
             return False
 
+        success = False # Initialize success flag
         try:
             # Create message
             message = MIMEText(body)
@@ -377,47 +386,58 @@ class GmailClientImpl(GmailClientInterface):
                 userId="me",
                 body={"raw": encoded_message},
             ).execute()
-            return True
+            success = True # Set flag on success
         except HttpError:
             logging.exception("Failed to send email to '%s'", to)
-            return False
+            # Let it return False at the end
         except Exception:
             logging.exception("An unexpected error occurred in send_email")
-            return False
+            # Let it return False at the end
+        # Remove else block
+
+        return success # Single return point
 
     def delete_email(self, email_id: str) -> bool:
         """Delete an email by its ID."""
         if not self.__authenticated or not self.__service:
             return False
 
+        success = False # Initialize success flag
         try:
             self.__service.users().messages().trash(
                 userId="me",
                 id=email_id,
             ).execute()
-            return True
+            success = True # Set flag on success
         except HttpError:
             logging.exception("Failed to delete email ID '%s'", email_id)
-            return False
+            # Let it return False at the end
         except Exception:
             logging.exception("An unexpected error occurred in delete_email")
-            return False
+            # Let it return False at the end
+        # Remove else block
+
+        return success # Single return point
 
     def mark_as_read(self, email_id: str) -> bool:
         """Mark an email as read."""
         if not self.__authenticated or not self.__service:
             return False
 
+        success = False # Initialize success flag
         try:
             self.__service.users().messages().modify(
                 userId="me",
                 id=email_id,
                 body={"removeLabelIds": ["UNREAD"]},
             ).execute()
-            return True
+            success = True # Set flag on success
         except HttpError:
             logging.exception("Failed to mark email ID '%s' as read", email_id)
-            return False
+            # Let it return False at the end
         except Exception:
             logging.exception("An unexpected error occurred in mark_as_read")
-            return False
+            # Let it return False at the end
+        # Remove else block
+
+        return success # Single return point

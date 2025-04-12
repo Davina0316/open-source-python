@@ -72,4 +72,4 @@ ignore_missing_imports = true  # Ignore missing imports (some external libraries
 
 
 [tool.uv.workspace]
-members = ["src/calculator/calculator", "src/calculator_component", "src/logger_component", "src/notifier_component", "inbox_client/tests", "hw2_inbox"]
+members = ["src/calculator/calculator", "src/calculator_component", "src/logger_component", "src/notifier_component"]
