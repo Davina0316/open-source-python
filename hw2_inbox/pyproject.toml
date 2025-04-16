@@ -1,15 +1,19 @@
 [project]
-name = "calculator-component"
+name = "hw2-inbox"
 version = "0.1.0"
-description = "A calculator component that performs simple calculation"
+description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "uv>=0.6.11",
+]
+
+[project.optional-dependencies]
+dev = [
     "coverage>=7.6.12",
     "mypy>=1.15.0",
     "pytest>=8.3.5",
     "ruff>=0.9.9",
-    "uv>=0.6.11",
 ]
 
 [build-system]
@@ -26,8 +30,10 @@ ignore = [
     "E501",
     "ANN101",
     "D100",
-    "D103"
+    "D103",
+    "W293" # White spaces are used for indentation in doc strings
 ]
+exclude = ["**/test_*.py"]
 
 [tool.ruff.lint.per-file-ignores]
 "*_test.py" = ["S101", "PLR2004"]

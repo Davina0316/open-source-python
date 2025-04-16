@@ -3,7 +3,7 @@ class Notifier:
     """Sends alerts when a result exceeds a threshold."""
 
     def __init__(self, threshold: float) -> None:
-        """Doc string"""
+        """Doc string."""
         self.threshold = threshold
         self.notifications:list[str] = []
 
@@ -14,5 +14,5 @@ class Notifier:
             self.notifications.append(message)
 
     def get_notifications(self) -> list[str]:
-        """Returns all notifications."""
+        """Return all notifications."""
         return self.notifications
