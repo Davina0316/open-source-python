@@ -6,6 +6,7 @@ deleting, and marking emails.
 """
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class GmailClientInterface(ABC):
@@ -78,17 +79,18 @@ class GmailClientInterface(ABC):
 
 
     @abstractmethod
-    def get_emails_list(self) -> list[dict]:
+    def get_emails_list(self) -> list[dict[str, Any]]:
         """Fetch a list of emails.
 
         Returns:
             List[Dict]: A list of email metadata, each represented as a dictionary
-                        containing fields such as 'subject', 'sender', 'snippet', etc.
+                        containing fields such as 'id', 'threadId', 'subject', 'sender',
+                        'date', and 'snippet'.
 
         """
 
     @abstractmethod
-    def get_email_content(self, email_id: str) -> dict:
+    def get_email_content(self, email_id: str) -> dict[str, Any]:
         """Fetch the full content of a specific email.
 
         Args:
@@ -130,13 +132,15 @@ class GmailClientInterface(ABC):
         """
 
     @abstractmethod
-    def mark_as_read(self, email_id: str) -> bool:
-        """Mark an email as read.
+    def modify_email_labels(self, email_id: str, add_labels: list[str] | None = None, remove_labels: list[str] | None = None) -> bool:
+        """Modify the labels of an email (e.g., mark as read/unread, starred, etc.).
 
         Args:
-            email_id (str): Unique identifier of the email
+            email_id (str): Unique identifier of the email.
+            add_labels (List[str], optional): List of labels to add (e.g., ['UNREAD', 'STARRED']). Defaults to None.
+            remove_labels (List[str], optional): List of labels to remove (e.g., ['READ']). Defaults to None.
 
         Returns:
-            bool: True if marked as read successfully, False otherwise
+            bool: True if labels were modified successfully, False otherwise.
 
         """
