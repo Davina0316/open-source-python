@@ -498,3 +498,8 @@ class GmailClientImpl(GmailClientInterface):
         # Remove else block
 
         return success # Single return point
+
+    def modify_email_labels(self, email_id: str, add_labels: list[str] | None = None, remove_labels: list[str] | None = None) -> bool:
+        """Modify the labels of an email (e.g., mark as read/unread, starred, etc.)."""
+        logging.error("Not implemented yet! Args: %s, %s, %s", email_id, add_labels, remove_labels)
+        return True
