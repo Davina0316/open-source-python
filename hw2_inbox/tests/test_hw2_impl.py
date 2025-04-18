@@ -564,41 +564,6 @@ def test_delete_email_success(
     mock_messages.trash.assert_called_once_with(userId="me", id="1")
 
 
-@patch("hw2_inbox.main.Path.exists", return_value=True)
-@patch("hw2_inbox.main.Credentials.from_authorized_user_file")
-@patch("hw2_inbox.main.build")
-def test_mark_as_read_success(
-    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
-) -> None:
-    # Setup mock credentials (valid)
-    mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
-    mock_creds_from_file.return_value = mock_creds
-
-    # Setup mock service
-    mock_service = MagicMock()
-    mock_users = MagicMock()
-    mock_messages = MagicMock()
-    mock_modify = MagicMock()
-
-    # Setup chain
-    mock_service.users.return_value = mock_users
-    mock_users.messages.return_value = mock_messages
-    mock_messages.modify.return_value = mock_modify
-    mock_modify.execute.return_value = {"id": "modified_1"}
-
-    mock_build.return_value = mock_service
-
-    # Login and authenticate (will call connect internally)
-    assert client.authenticate("alice", "TOKEN123")
-    assert client.is_connected()
-
-    # Test mark_as_read
-    assert client.mark_as_read("1")
-    mock_messages.modify.assert_called_once_with(
-        userId="me", id="1", body={"removeLabelIds": ["UNREAD"]}
-    )
-
-
 def test_operations_fail_when_not_authenticated(client: GmailClientImpl) -> None:
     # Test all operations without authentication
     assert not client.use_mailbox("INBOX")
@@ -607,7 +572,6 @@ def test_operations_fail_when_not_authenticated(client: GmailClientImpl) -> None
     assert client.get_email_content("1") == {}
     assert not client.send_email("to@example.com", "subject", "body")
     assert not client.delete_email("1")
-    assert not client.mark_as_read("1")
 
 
 @patch("hw2_inbox.main.Path.exists", return_value=True)
@@ -641,4 +605,108 @@ def test_operations_handle_api_errors(
     assert client.get_email_content("1") == {}
     assert not client.send_email("to@example.com", "subject", "body")
     assert not client.delete_email("1")
-    assert not client.mark_as_read("1")
+
+
+@patch("hw2_inbox.main.Path.exists", return_value=True)
+@patch("hw2_inbox.main.Credentials.from_authorized_user_file")
+@patch("hw2_inbox.main.build")
+def test_modify_email_labels_success(
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
+    # Setup mock credentials (valid)
+    mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
+    mock_creds_from_file.return_value = mock_creds
+
+    # Setup mock service
+    mock_service = MagicMock()
+    mock_users = MagicMock()
+    mock_messages = MagicMock()
+    mock_modify = MagicMock()
+
+    # Setup chain
+    mock_service.users.return_value = mock_users
+    mock_users.messages.return_value = mock_messages
+    mock_messages.modify.return_value = mock_modify
+    mock_modify.execute.return_value = {"id": "modified_1"} # API returns the modified message
+
+    mock_build.return_value = mock_service
+
+    # Login and authenticate (will call connect internally)
+    assert client.authenticate("alice", "TOKEN123")
+    assert client.is_connected()
+
+    email_id = "email_to_modify"
+    add_labels = ["STARRED", "IMPORTANT"]
+    remove_labels = ["UNREAD"]
+
+    # Test modify_email_labels
+    assert client.modify_email_labels(email_id, add_labels=add_labels, remove_labels=remove_labels)
+
+    # Verify the mocks were called
+    mock_messages.modify.assert_called_once_with(
+        userId="me",
+        id=email_id,
+        body={
+            "addLabelIds": add_labels,
+            "removeLabelIds": remove_labels,
+        }
+    )
+
+
+@patch("hw2_inbox.main.Path.exists", return_value=True)
+@patch("hw2_inbox.main.Credentials.from_authorized_user_file")
+@patch("hw2_inbox.main.build")
+def test_modify_email_labels_no_action(
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
+    # Setup mock credentials (valid)
+    mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
+    mock_creds_from_file.return_value = mock_creds
+
+    # Setup mock service (modify should not be called)
+    mock_service = MagicMock()
+    mock_messages = MagicMock()
+    mock_service.users().messages.return_value = mock_messages
+    mock_build.return_value = mock_service
+
+    # Login and authenticate
+    assert client.authenticate("alice", "TOKEN123")
+
+    # Test modify_email_labels with no labels
+    assert client.modify_email_labels("email_no_modify") # Should return True as no action needed
+
+    # Verify modify was NOT called
+    mock_messages.modify.assert_not_called()
+
+
+def test_modify_email_labels_fail_when_not_authenticated(client: GmailClientImpl) -> None:
+    assert not client.modify_email_labels("any_id", add_labels=["STARRED"])
+
+# Test modify_email_labels API error handling (covered by test_operations_handle_api_errors)
+# Adding a specific assertion here for clarity
+@patch("hw2_inbox.main.Path.exists", return_value=True)
+@patch("hw2_inbox.main.Credentials.from_authorized_user_file")
+@patch("hw2_inbox.main.build")
+def test_modify_email_labels_api_error(
+    mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
+) -> None:
+    # Setup mock credentials (valid)
+    mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
+    mock_creds_from_file.return_value = mock_creds
+
+    # Setup mock service that raises exception on modify
+    mock_service = MagicMock()
+    mock_messages = MagicMock()
+    mock_messages.modify.side_effect = Exception("API Modify Error")
+    mock_service.users().messages.return_value = mock_messages
+    mock_build.return_value = mock_service
+
+    # Login and authenticate
+    assert client.authenticate("alice", "TOKEN123")
+
+    # Test modify_email_labels with API error
+    assert not client.modify_email_labels("fail_id", add_labels=["INBOX"])
+
+    # Verify modify was called (even though it failed)
+    mock_messages.modify.assert_called_once()
+

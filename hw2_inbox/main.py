@@ -476,30 +476,45 @@ class GmailClientImpl(GmailClientInterface):
 
         return success # Single return point
 
-    def mark_as_read(self, email_id: str) -> bool:
-        """Mark an email as read."""
+    def modify_email_labels(self, email_id: str, add_labels: list[str] | None = None, remove_labels: list[str] | None = None) -> bool:
+        """Modify the labels of an email (e.g., mark as read/unread, starred, etc.)."""
         if not self.__authenticated or not self.__service:
+            logging.warning("Cannot modify labels: Not authenticated or service not available.")
             return False
 
-        success = False # Initialize success flag
+        # Initialize the request body
+        modify_request: dict[str, Any] = {}
+        if add_labels:
+            modify_request["addLabelIds"] = add_labels
+        if remove_labels:
+            modify_request["removeLabelIds"] = remove_labels
+
+        # Only proceed if there are labels to add or remove
+        if not modify_request:
+            logging.info("No labels specified to add or remove for email ID '%s'.", email_id)
+            return True # No action needed, considered successful
+
+        success = False
         try:
             self.__service.users().messages().modify(
                 userId="me",
                 id=email_id,
-                body={"removeLabelIds": ["UNREAD"]},
+                body=modify_request,
             ).execute()
-            success = True # Set flag on success
+            logging.info(
+                "Successfully modified labels for email ID '%s': Added=%s, Removed=%s",
+                email_id,
+                add_labels or "None",
+                remove_labels or "None",
+            )
+            success = True
         except HttpError:
-            logging.exception("Failed to mark email ID '%s' as read", email_id)
-            # Let it return False at the end
+            logging.exception(
+                "Failed to modify labels for email ID '%s'.", email_id,
+            )
         except Exception:
-            logging.exception("An unexpected error occurred in mark_as_read")
-            # Let it return False at the end
-        # Remove else block
+            logging.exception(
+                "An unexpected error occurred while modifying labels for email ID '%s'.", email_id,
+            )
 
-        return success # Single return point
-
-    def modify_email_labels(self, email_id: str, add_labels: list[str] | None = None, remove_labels: list[str] | None = None) -> bool:
-        """Modify the labels of an email (e.g., mark as read/unread, starred, etc.)."""
-        logging.error("Not implemented yet! Args: %s, %s, %s", email_id, add_labels, remove_labels)
-        return True
+        return success
