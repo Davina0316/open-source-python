@@ -15,16 +15,13 @@ def client() -> GmailClientImpl:
     return GmailClientImpl()
 
 
-@patch("pathlib.Path.open")  # mock_path_open (Use default MagicMock)
-@patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file")  # mock_flow_factory
-@patch("hw2_inbox.main.build")  # mock_build
-@patch("hw2_inbox.main.Path.exists") # <-- Revert to patching exists directly
+@patch("pathlib.Path.open") 
+@patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file")  
+@patch("hw2_inbox.main.build")  
+@patch("hw2_inbox.main.Path.exists")
 def test_should_connect_with_new_credentials(
     mock_path_exists: MagicMock, mock_build: MagicMock, mock_flow_factory: MagicMock, mock_path_open: MagicMock, client: GmailClientImpl # <-- Change signature back
 ) -> None:
-    # Configure the mock Path.exists method with a side_effect list
-    # First call (token_path.exists) returns False
-    # Second call (credentials_path.exists) returns True
     mock_path_exists.side_effect = [False, True]
 
     # Setup mock flow
@@ -34,11 +31,9 @@ def test_should_connect_with_new_credentials(
     mock_flow.run_local_server.return_value = mock_creds
     mock_flow_factory.return_value = mock_flow
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
-    # Setup mock file handle for the context manager
     mock_file_handle = MagicMock()
     mock_path_open.return_value.__enter__.return_value = mock_file_handle
 
@@ -48,19 +43,17 @@ def test_should_connect_with_new_credentials(
     assert client.is_connected()
     mock_flow_factory.assert_called_once()
     mock_flow.run_local_server.assert_called_once()
-    # Assert open was called with 'w' mode (instance path is tricky to assert reliably here)
     mock_path_open.assert_called_once_with("w")
-    # Assert write was called on the file handle from the context manager
     mock_file_handle.write.assert_called_once_with(
         '{"token": "test_token", "refresh_token": "test_refresh", "client_id": "test_client_id", "client_secret": "test_client_secret"}'
     )
 
 
-@patch("hw2_inbox.main.Path.exists", return_value=True)  # mock_path_exists
-@patch("hw2_inbox.main.Credentials.from_authorized_user_file")  # mock_creds_from_file
-@patch("hw2_inbox.main.open", new_callable=mock_open)  # mock_file_open
-@patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file")  # mock_flow_factory
-@patch("hw2_inbox.main.build")  # mock_build
+@patch("hw2_inbox.main.Path.exists", return_value=True) 
+@patch("hw2_inbox.main.Credentials.from_authorized_user_file")  
+@patch("hw2_inbox.main.open", new_callable=mock_open)  
+@patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file") 
+@patch("hw2_inbox.main.build") 
 def test_should_connect_with_valid_token(
     mock_build: MagicMock,
     mock_flow_factory: MagicMock,
@@ -69,11 +62,9 @@ def test_should_connect_with_valid_token(
     mock_path_exists: MagicMock,
     client: GmailClientImpl,
 ) -> None:
-    # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
@@ -86,11 +77,11 @@ def test_should_connect_with_valid_token(
     mock_file_open.assert_not_called()
 
 
-@patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file")  # mock_flow_factory
-@patch("pathlib.Path.open")  # mock_path_open
-@patch("hw2_inbox.main.Credentials.from_authorized_user_file")  # mock_creds_from_file
-@patch("hw2_inbox.main.Path.exists", return_value=True)  # mock_file_exists
-@patch("hw2_inbox.main.build")  # mock_build
+@patch("hw2_inbox.main.InstalledAppFlow.from_client_secrets_file") 
+@patch("pathlib.Path.open")  
+@patch("hw2_inbox.main.Credentials.from_authorized_user_file")  
+@patch("hw2_inbox.main.Path.exists", return_value=True) 
+@patch("hw2_inbox.main.build")  
 def test_should_refresh_token_if_expired(
     mock_build: MagicMock,
     mock_file_exists: MagicMock,
@@ -99,16 +90,13 @@ def test_should_refresh_token_if_expired(
     mock_flow_factory: MagicMock,
     client: GmailClientImpl,
 ) -> None:
-    # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=False, expired=True, refresh_token="123")
     mock_creds.to_json.return_value = '{"token": "refreshed_token", "refresh_token": "123", "client_id": "test_client_id", "client_secret": "test_client_secret"}'
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
-    # Setup mock file handle for the context manager
     mock_file_handle = MagicMock()
     mock_path_open.return_value.__enter__.return_value = mock_file_handle
 
@@ -118,36 +106,29 @@ def test_should_refresh_token_if_expired(
     assert client.is_connected()
     mock_flow_factory.assert_not_called()
     mock_creds.refresh.assert_called_once()
-    # Assert open was called with 'w' mode
     mock_path_open.assert_called_once_with("w")
-    # Assert write was called on the file handle
     mock_file_handle.write.assert_called_once_with(
         '{"token": "refreshed_token", "refresh_token": "123", "client_id": "test_client_id", "client_secret": "test_client_secret"}'
     )
 
 
-@patch("hw2_inbox.main.Path.exists", return_value=True)  # Assume token.json exists
-@patch("hw2_inbox.main.Credentials.from_authorized_user_file")  # Mock reading token
-@patch("hw2_inbox.main.build")  # Mock service build
+@patch("hw2_inbox.main.Path.exists", return_value=True)  
+@patch("hw2_inbox.main.Credentials.from_authorized_user_file")  
+@patch("hw2_inbox.main.build") 
 def test_login_success(mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
-    # Login will call the real connect(), which uses the mocks
     assert client.login("alice", "password123")
-    assert client.is_connected()  # This should now pass naturally
+    assert client.is_connected() 
 
-    # Verify build was called by connect
     mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
 
 
 def test_login_failure(client: GmailClientImpl) -> None:
-    # Mock connect to avoid actual OAuth flow
     with patch.object(client, "connect", return_value=True):
         assert not client.login("", "")
         assert not client.is_connected()
@@ -159,19 +140,15 @@ def test_login_failure(client: GmailClientImpl) -> None:
 def test_authenticate_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
-    # Authenticate will call the real connect(), which uses the mocks
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
-    # Verify build was called by connect
     mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
 
 
@@ -184,15 +161,13 @@ def test_authenticate_failure(client: GmailClientImpl) -> None:
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_logout(mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl) -> None:
-    # Setup mock credentials (valid)
+
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
-    # Login will call the real connect(), which uses the mocks
     assert client.login("alice", "password123")
     assert client.is_connected()
 
@@ -210,11 +185,9 @@ def test_logout(mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_pat
 def test_connect_then_login_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=True)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
@@ -229,11 +202,9 @@ def test_connect_then_login_success(
 def test_login_failure_wrong_password(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=True)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
@@ -247,11 +218,9 @@ def test_login_failure_wrong_password(
 def test_logout_clears_state(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials
     mock_creds = MagicMock(spec=Credentials, valid=True)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_build.return_value = mock_service
 
@@ -269,17 +238,14 @@ def test_logout_clears_state(
 def test_use_mailbox_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_users = MagicMock()
     mock_labels = MagicMock()
     mock_list = MagicMock()
 
-    # Setup chain for fetch_mailboxes call within use_mailbox
     mock_service.users.return_value = mock_users
     mock_users.labels.return_value = mock_labels
     mock_labels.list.return_value = mock_list
@@ -287,11 +253,9 @@ def test_use_mailbox_success(
 
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally)
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
-    # Test use_mailbox
     assert client.use_mailbox("INBOX")
     assert client._GmailClientImpl__current_mailbox == "INBOX" # type: ignore[attr-defined]
     mock_labels.list.assert_called_once()
@@ -303,17 +267,14 @@ def test_use_mailbox_success(
 def test_use_mailbox_failure_invalid_mailbox(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_users = MagicMock()
     mock_labels = MagicMock()
     mock_list = MagicMock()
 
-    # Setup chain
     mock_service.users.return_value = mock_users
     mock_users.labels.return_value = mock_labels
     mock_labels.list.return_value = mock_list
@@ -321,11 +282,9 @@ def test_use_mailbox_failure_invalid_mailbox(
 
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally)
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
-    # Test use_mailbox with invalid mailbox
     assert not client.use_mailbox("NONEXISTENT")
     assert client._GmailClientImpl__current_mailbox is None # type: ignore[attr-defined]
     mock_labels.list.assert_called_once()
@@ -337,17 +296,14 @@ def test_use_mailbox_failure_invalid_mailbox(
 def test_fetch_mailboxes_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_users = MagicMock()
     mock_labels = MagicMock()
     mock_list = MagicMock()
 
-    # Setup chain
     mock_service.users.return_value = mock_users
     mock_users.labels.return_value = mock_labels
     mock_labels.list.return_value = mock_list
@@ -357,20 +313,16 @@ def test_fetch_mailboxes_success(
 
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally using mocks)
     authenticated = client.authenticate("alice", "TOKEN123")
     assert authenticated is True
     assert client.is_connected()
 
-    # Test fetch_mailboxes using mocked service
     mailboxes = client.fetch_mailboxes()
 
-    # Assert based on mocked return value
     assert isinstance(mailboxes, list)
     assert mailboxes == ["INBOX", "SENT", "TRASH"]
-    mock_labels.list.assert_called_once()  # Verify the mocked API call
+    mock_labels.list.assert_called_once() 
 
-    # Clean up connection if needed, although pytest usually handles instance cleanup
     client.logout()
 
 
@@ -380,24 +332,20 @@ def test_fetch_mailboxes_success(
 def test_get_emails_list_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_users = MagicMock()
     mock_messages = MagicMock()
     mock_list = MagicMock()
     mock_get = MagicMock()
 
-    # Setup list chain
     mock_service.users.return_value = mock_users
     mock_users.messages.return_value = mock_messages
     mock_messages.list.return_value = mock_list
     mock_list.execute.return_value = {"messages": [{"id": "1"}, {"id": "2"}]}
 
-    # Setup get chain
     mock_messages.get.return_value = mock_get
     mock_get.execute.side_effect = [
         {
@@ -424,12 +372,10 @@ def test_get_emails_list_success(
 
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally)
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
-    # Test get_emails_list
-    emails = client.get_emails_list()  # Default mailbox is INBOX
+    emails = client.get_emails_list() 
     assert len(emails) == 2
     assert emails[0]["id"] == "1"
     assert emails[0]["subject"] == "Test Subject 1"
@@ -438,7 +384,6 @@ def test_get_emails_list_success(
     assert emails[1]["subject"] == "Test Subject 2"
     assert emails[1]["sender"] == "sender2@example.com"
 
-    # Verify API calls
     mock_messages.list.assert_called_once_with(userId="me", labelIds=["INBOX"], maxResults=10)
     assert mock_messages.get.call_count == 2
 
@@ -449,17 +394,14 @@ def test_get_emails_list_success(
 def test_get_email_content_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_users = MagicMock()
     mock_messages = MagicMock()
     mock_get = MagicMock()
 
-    # Setup chain
     mock_service.users.return_value = mock_users
     mock_users.messages.return_value = mock_messages
     mock_messages.get.return_value = mock_get
@@ -474,18 +416,15 @@ def test_get_email_content_success(
             ],
             "parts": [
                 {"mimeType": "text/plain", "body": {"data": "VGVzdCBlbWFpbCBib2R5"}}
-                # 'Test email body' base64 encoded
             ],
         },
     }
 
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally)
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
-    # Test get_email_content
     email = client.get_email_content("123")
     assert email["id"] == "123"
     assert email["subject"] == "Test Subject"
@@ -494,7 +433,6 @@ def test_get_email_content_success(
     assert email["to"] == "recipient@example.com"
     assert email["body"] == "Test email body"
 
-    # Verify the mocks were called
     mock_messages.get.assert_called_once_with(userId="me", id="123", format="full")
 
 
@@ -504,17 +442,14 @@ def test_get_email_content_success(
 def test_send_email_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_users = MagicMock()
     mock_messages = MagicMock()
     mock_send = MagicMock()
 
-    # Setup chain
     mock_service.users.return_value = mock_users
     mock_users.messages.return_value = mock_messages
     mock_messages.send.return_value = mock_send
@@ -522,11 +457,9 @@ def test_send_email_success(
 
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally)
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
-    # Test send_email
     assert client.send_email("recipient@example.com", "Test Subject", "Test Body")
     mock_messages.send.assert_called_once()
 
@@ -537,17 +470,14 @@ def test_send_email_success(
 def test_delete_email_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_users = MagicMock()
     mock_messages = MagicMock()
     mock_trash = MagicMock()
 
-    # Setup chain
     mock_service.users.return_value = mock_users
     mock_users.messages.return_value = mock_messages
     mock_messages.trash.return_value = mock_trash
@@ -555,17 +485,14 @@ def test_delete_email_success(
 
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally)
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
-    # Test delete_email
     assert client.delete_email("1")
     mock_messages.trash.assert_called_once_with(userId="me", id="1")
 
 
 def test_operations_fail_when_not_authenticated(client: GmailClientImpl) -> None:
-    # Test all operations without authentication
     assert not client.use_mailbox("INBOX")
     assert client.fetch_mailboxes() == []
     assert client.get_emails_list() == []
@@ -580,11 +507,9 @@ def test_operations_fail_when_not_authenticated(client: GmailClientImpl) -> None
 def test_operations_handle_api_errors(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service that raises exceptions
     mock_service = MagicMock()
     mock_service.users().labels().list.side_effect = Exception("API Error")
     mock_service.users().messages().list.side_effect = Exception("API Error")
@@ -594,12 +519,10 @@ def test_operations_handle_api_errors(
     mock_service.users().messages().modify.side_effect = Exception("API Error")
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally)
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
-    # Test all operations with API errors
-    assert not client.use_mailbox("INBOX")  # Fails because fetch_mailboxes fails
+    assert not client.use_mailbox("INBOX") 
     assert client.fetch_mailboxes() == []
     assert client.get_emails_list() == []
     assert client.get_email_content("1") == {}
@@ -613,25 +536,21 @@ def test_operations_handle_api_errors(
 def test_modify_email_labels_success(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service
     mock_service = MagicMock()
     mock_users = MagicMock()
     mock_messages = MagicMock()
     mock_modify = MagicMock()
 
-    # Setup chain
     mock_service.users.return_value = mock_users
     mock_users.messages.return_value = mock_messages
     mock_messages.modify.return_value = mock_modify
-    mock_modify.execute.return_value = {"id": "modified_1"} # API returns the modified message
+    mock_modify.execute.return_value = {"id": "modified_1"} 
 
     mock_build.return_value = mock_service
 
-    # Login and authenticate (will call connect internally)
     assert client.authenticate("alice", "TOKEN123")
     assert client.is_connected()
 
@@ -639,10 +558,8 @@ def test_modify_email_labels_success(
     add_labels = ["STARRED", "IMPORTANT"]
     remove_labels = ["UNREAD"]
 
-    # Test modify_email_labels
     assert client.modify_email_labels(email_id, add_labels=add_labels, remove_labels=remove_labels)
 
-    # Verify the mocks were called
     mock_messages.modify.assert_called_once_with(
         userId="me",
         id=email_id,
@@ -659,54 +576,42 @@ def test_modify_email_labels_success(
 def test_modify_email_labels_no_action(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service (modify should not be called)
     mock_service = MagicMock()
     mock_messages = MagicMock()
     mock_service.users().messages.return_value = mock_messages
     mock_build.return_value = mock_service
 
-    # Login and authenticate
     assert client.authenticate("alice", "TOKEN123")
 
-    # Test modify_email_labels with no labels
-    assert client.modify_email_labels("email_no_modify") # Should return True as no action needed
+    assert client.modify_email_labels("email_no_modify") 
 
-    # Verify modify was NOT called
     mock_messages.modify.assert_not_called()
 
 
 def test_modify_email_labels_fail_when_not_authenticated(client: GmailClientImpl) -> None:
     assert not client.modify_email_labels("any_id", add_labels=["STARRED"])
 
-# Test modify_email_labels API error handling (covered by test_operations_handle_api_errors)
-# Adding a specific assertion here for clarity
 @patch("hw2_inbox.main.Path.exists", return_value=True)
 @patch("hw2_inbox.main.Credentials.from_authorized_user_file")
 @patch("hw2_inbox.main.build")
 def test_modify_email_labels_api_error(
     mock_build: MagicMock, mock_creds_from_file: MagicMock, mock_path_exists: MagicMock, client: GmailClientImpl
 ) -> None:
-    # Setup mock credentials (valid)
     mock_creds = MagicMock(spec=Credentials, valid=True, expired=False)
     mock_creds_from_file.return_value = mock_creds
 
-    # Setup mock service that raises exception on modify
     mock_service = MagicMock()
     mock_messages = MagicMock()
     mock_messages.modify.side_effect = Exception("API Modify Error")
     mock_service.users().messages.return_value = mock_messages
     mock_build.return_value = mock_service
 
-    # Login and authenticate
     assert client.authenticate("alice", "TOKEN123")
 
-    # Test modify_email_labels with API error
     assert not client.modify_email_labels("fail_id", add_labels=["INBOX"])
 
-    # Verify modify was called (even though it failed)
     mock_messages.modify.assert_called_once()
 

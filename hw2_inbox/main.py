@@ -20,14 +20,12 @@ from googleapiclient.errors import HttpError
 
 from . import GmailClientInterface
 
-# If modifying these scopes, delete the file token.json.
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/gmail.modify",
 ]
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -47,13 +45,11 @@ class GmailClientImpl(GmailClientInterface):
         self.__service: Resource | None = None
         self.__creds: Credentials | None = None
 
-        # Test user name, password database
         self.__users: dict[str, str] = {
             "alice": "password123",
             "bob": "123456",
         }
 
-        # Test token database
         self.__valid_tokens: dict[str, str] = {
             "alice": "TOKEN123",
             "bob": "TOKEN456",
@@ -67,14 +63,11 @@ class GmailClientImpl(GmailClientInterface):
         """Attempt connection using service account credentials from environment variables."""
         service_account_key_json = os.environ.get("GMAIL_SERVICE_ACCOUNT_KEY_JSON")
         if not service_account_key_json:
-            return False # No service account key found
+            return False
 
         logging.info("Attempting service account authentication from environment variable.")
         try:
-            key_info = json.loads(service_account_key_json)
-            # Note: If using domain-wide delegation, you'll need to uncomment
-            # and set the 'subject' parameter below, and ensure the
-            # GMAIL_IMPERSONATED_USER environment variable is set in CircleCI.
+            key_info: dict[str, Any] = json.loads(service_account_key_json)
             self.__creds = service_account.Credentials.from_service_account_info(
                 key_info,
                 scopes=SCOPES,
@@ -85,8 +78,8 @@ class GmailClientImpl(GmailClientInterface):
             self.__service = None
             self.__connected = False
             return False
-        except Exception: # Catch potential issues loading credentials or building service
-            logging.exception("Service account authentication failed") # Fixed logging call
+        except Exception:
+            logging.exception("Service account authentication failed")
             self.__service = None
             self.__connected = False
             return False
@@ -103,11 +96,9 @@ class GmailClientImpl(GmailClientInterface):
             token_path = root_dir / "hw2_inbox" / "token.json"
             credentials_path = root_dir / "hw2_inbox" / "resources" / "credentials.json"
 
-            # Initialize creds to None before checks
             self.__creds = None
 
             if token_path.exists():
-                # Try loading from token file ONLY if it exists
                 self.__creds = Credentials.from_authorized_user_file(str(token_path), SCOPES) # type: ignore[no-untyped-call]
 
             if self.__creds is None or not self.__creds.valid:
@@ -115,7 +106,7 @@ class GmailClientImpl(GmailClientInterface):
                     self.__creds.refresh(Request()) # type: ignore[no-untyped-call]
                     with token_path.open("w") as token:
                         token.write(self.__creds.to_json())
-                elif credentials_path.exists(): # Only run flow if credentials file exists
+                elif credentials_path.exists():
                     flow = InstalledAppFlow.from_client_secrets_file(
                         str(credentials_path),
                         SCOPES,
@@ -128,46 +119,40 @@ class GmailClientImpl(GmailClientInterface):
                     else:
                         self._handle_oauth_flow_failure()
                 else:
-                    # Cannot proceed if no token, no refresh token, and no credentials file
                     logging.error("OAuth failed: No token.json, refresh_token, or credentials.json found.")
                     return False
 
-            # Build the Gmail service object
             self.__service = build("gmail", "v1", credentials=self.__creds)
 
         except (OSError, RefreshError, HttpError, RuntimeError):
-            logging.exception("Local OAuth connection/authentication failed") # G004, TRY401 fixed
+            logging.exception("Local OAuth connection/authentication failed")
             self.__service = None
             self.__connected = False
-            self.__authenticated = False # Also reset auth state on failure
+            self.__authenticated = False
             return False
         except Exception:
-            logging.exception("An unexpected error occurred during local OAuth connect") # G004, TRY401 fixed
+            logging.exception("An unexpected error occurred during local OAuth connect")
             self.__service = None
             self.__connected = False
-            self.__authenticated = False # Also reset auth state on failure
+            self.__authenticated = False
             return False
-        else: # TRY300 fixed
-            self.__connected = True # Mark as connected here after successful build
+        else:
+            self.__connected = True
             logging.info("Local OAuth authentication successful.")
             return True
 
     def connect(self) -> bool:
         """Establish a connection to the Gmail service, trying Service Account then OAuth."""
-        # Reset state before attempting connection
         self.__service = None
         self.__creds = None
         self.__connected = False
 
-        # Try Service Account first (suitable for CI)
         if self._connect_with_service_account():
             return True
 
-        # Fallback to OAuth (suitable for local development)
         if self._connect_with_oauth():
             return True
 
-        # If both failed
         logging.error("Failed to connect using both service account and OAuth methods.")
         return False
 
@@ -245,7 +230,6 @@ class GmailClientImpl(GmailClientInterface):
             return False
 
         try:
-            # Verify mailbox exists
             labels = self.fetch_mailboxes()
             if mailbox in labels:
                 self.__current_mailbox = mailbox
@@ -280,9 +264,8 @@ class GmailClientImpl(GmailClientInterface):
         if not self.__authenticated or not self.__service:
             return []
 
-        email_list: list[dict[str, Any]] = [] # Ensure type hint for initialization
+        email_list: list[dict[str, Any]] = []
         try:
-            # Get messages in the mailbox
             results = (
                 self.__service.users()
                 .messages()
@@ -297,10 +280,9 @@ class GmailClientImpl(GmailClientInterface):
             messages = results.get("messages", [])
 
             if not messages:
-                pass # Let it return the initialized empty list at the end
+                pass
             else:
                 for msg in messages:
-                    # Get the full message details
                     message = (
                         self.__service.users()
                         .messages()
@@ -321,7 +303,6 @@ class GmailClientImpl(GmailClientInterface):
                         "sender": "",
                     }
 
-                    # Extract subject and sender from headers
                     for header in headers:
                         if header["name"] == "Subject":
                             email_data["subject"] = header["value"]
@@ -332,13 +313,10 @@ class GmailClientImpl(GmailClientInterface):
 
         except HttpError:
             logging.exception("Failed to get email list for mailbox '%s'", mailbox)
-            # Return initial empty list at the end
         except Exception:
             logging.exception("An unexpected error occurred in get_emails_list")
-            # Return initial empty list at the end
-        # No else block needed, email_list is populated in try if successful
 
-        return email_list # Single return point
+        return email_list
 
     def _parse_email_headers(self, headers: list[dict[str, str]]) -> dict[str, str]:
         """Parse relevant fields from email headers."""
@@ -365,20 +343,16 @@ class GmailClientImpl(GmailClientInterface):
                 if part.get("mimeType") == "text/plain":
                     body_data = part.get("body", {}).get("data")
                     body = body_data if body_data else ""
-                    break  # Assume first text/plain part is the body
+                    break
         elif "body" in payload:
             body_data = payload.get("body", {}).get("data")
             body = body_data if body_data else ""
 
-        # Decode body from base64 if needed
         if body:
             try:
-                # It's common for email bodies (especially non-ASCII) to be base64 encoded
                 body = base64.urlsafe_b64decode(body).decode("utf-8")
             except (binascii.Error, UnicodeDecodeError, ValueError) as e:
-                # Log a warning if decoding fails, but proceed with the raw data
                 logging.warning("Failed to decode base64 email body, returning raw data: %s", e)
-                # Keep original 'body' which is the raw base64 data
 
         return body
 
@@ -388,7 +362,6 @@ class GmailClientImpl(GmailClientInterface):
             return {}
 
         try:
-            # Get the full message
             message = (
                 self.__service.users()
                 .messages()
@@ -413,7 +386,6 @@ class GmailClientImpl(GmailClientInterface):
             logging.exception("An unexpected error occurred in get_email_content")
             return {}
         else:
-            # Construct and return dictionary in the else block
             return {
                 "id": email_id,
                 "subject": parsed_headers["subject"],
@@ -428,53 +400,44 @@ class GmailClientImpl(GmailClientInterface):
         if not self.__authenticated or not self.__service:
             return False
 
-        success = False # Initialize success flag
+        success = False
         try:
-            # Create message
             message = MIMEText(body)
             message["to"] = to
             message["subject"] = subject
 
-            # Encode the message
             encoded_message = urlsafe_b64encode(message.as_bytes()).decode()
 
-            # Send the email
             self.__service.users().messages().send(
                 userId="me",
                 body={"raw": encoded_message},
             ).execute()
-            success = True # Set flag on success
+            success = True
         except HttpError:
             logging.exception("Failed to send email to '%s'", to)
-            # Let it return False at the end
         except Exception:
             logging.exception("An unexpected error occurred in send_email")
-            # Let it return False at the end
-        # Remove else block
 
-        return success # Single return point
+        return success
 
     def delete_email(self, email_id: str) -> bool:
         """Delete an email by its ID."""
         if not self.__authenticated or not self.__service:
             return False
 
-        success = False # Initialize success flag
+        success = False
         try:
             self.__service.users().messages().trash(
                 userId="me",
                 id=email_id,
             ).execute()
-            success = True # Set flag on success
+            success = True
         except HttpError:
             logging.exception("Failed to delete email ID '%s'", email_id)
-            # Let it return False at the end
         except Exception:
             logging.exception("An unexpected error occurred in delete_email")
-            # Let it return False at the end
-        # Remove else block
 
-        return success # Single return point
+        return success
 
     def modify_email_labels(self, email_id: str, add_labels: list[str] | None = None, remove_labels: list[str] | None = None) -> bool:
         """Modify the labels of an email (e.g., mark as read/unread, starred, etc.)."""
@@ -482,17 +445,15 @@ class GmailClientImpl(GmailClientInterface):
             logging.warning("Cannot modify labels: Not authenticated or service not available.")
             return False
 
-        # Initialize the request body
         modify_request: dict[str, Any] = {}
         if add_labels:
             modify_request["addLabelIds"] = add_labels
         if remove_labels:
             modify_request["removeLabelIds"] = remove_labels
 
-        # Only proceed if there are labels to add or remove
         if not modify_request:
             logging.info("No labels specified to add or remove for email ID '%s'.", email_id)
-            return True # No action needed, considered successful
+            return True
 
         success = False
         try:
