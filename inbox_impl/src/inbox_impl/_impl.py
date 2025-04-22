@@ -17,7 +17,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
-from inbox_api import GmailClientInterface
+from inbox_api.src.inbox_api import GmailClientInterface
 
 from .scopes import SCOPES
 
