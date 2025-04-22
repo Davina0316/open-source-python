@@ -30,9 +30,7 @@ jobs:
           root: .
           paths:
             - .venv
-            - src
             - hw2_inbox
-            - tests
             - pyproject.toml
             # If your repo structure has other dirs/files you need, list them too.
 
@@ -45,7 +43,6 @@ jobs:
           name: Run lint (Ruff)
           command: |
             source .venv/bin/activate
-            ruff check src
             ruff check hw2_inbox
 
   type-check:
@@ -57,7 +54,6 @@ jobs:
           name: Run type checking (mypy)
           command: |
             source .venv/bin/activate
-            mypy src
             mypy hw2_inbox
 
   test:
