@@ -10,7 +10,6 @@ from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Any
 
-import inbox_api
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
@@ -18,6 +17,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
+from inbox_api import GmailClientInterface
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -31,7 +31,7 @@ logging.basicConfig(
 )
 
 
-class GmailClientImpl(inbox_api.GmailClientInterface):
+class GmailClientImpl(GmailClientInterface):
     """Implement the GmailClientInterface."""
 
     def __init__(self) -> None:

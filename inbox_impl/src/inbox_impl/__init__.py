@@ -4,7 +4,7 @@ import inbox_api
 
 from ._impl import GmailClientImpl
 
-__all__ = ["GmailClientImpl", "_impl"]
+__all__: list[str] = ["GmailClientImpl", "_impl"]
 
 # Dependency Injection of this implementation into the API
 #

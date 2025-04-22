@@ -146,3 +146,5 @@ class GmailClientInterface(ABC):
 def get_client() -> GmailClientInterface:
     """Return an instance of a Mail Client."""
     raise NotImplementedError
+
+__all__: list[str] = ["GmailClientInterface", "get_client"]

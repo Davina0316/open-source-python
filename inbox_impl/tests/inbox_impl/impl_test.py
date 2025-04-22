@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 @pytest.fixture
-def client() -> GmailClientImpl:
+def client() -> GmailClientInterface:
     # return GmailClientImpl()
     return get_client()
 
