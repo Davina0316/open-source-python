@@ -1,10 +1,13 @@
+"""Tests for the Gmail client interface."""
+
 import pytest
 from pytest_mock import MockerFixture
 from typing import List, Dict, Any
 
-from inbox_api import GmailClientInterface
+from inbox_api.src.inbox_api import GmailClientInterface
 
 class TestGmailClientInterface:
+    """Test cases for the Gmail client interface."""
 
     def test_connect(self, mocker: MockerFixture) -> None:
         mock_client = mocker.create_autospec(GmailClientInterface, instance=True)
