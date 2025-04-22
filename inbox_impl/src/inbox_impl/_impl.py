@@ -5,7 +5,6 @@ import binascii
 import json
 import logging
 import os
-from base64 import urlsafe_b64encode
 from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Any
@@ -133,6 +132,7 @@ class GmailClientImpl(GmailClientInterface):
             return False
         else:
             self.__connected = True
+            self.__authenticated = True
             logging.info("Local OAuth authentication successful.")
             return True
 
@@ -245,73 +245,118 @@ class GmailClientImpl(GmailClientInterface):
         try:
             results = self.__service.users().labels().list(userId="me").execute()
             labels = results.get("labels", [])
+            
+            visible_labels = []
+            important_system_labels = {"INBOX", "SENT", "DRAFT", "STARRED", "TRASH"}
+            
+            for label in labels:
+                label_name = label.get("name", "")
+                label_type = label.get("type", "")
+                
+                if label_name in important_system_labels:
+                    visible_labels.append(label_name)
+                    continue
+                
+                if (label_type == "user" or
+                    (label_type == "system" and
+                     label.get("labelListVisibility") != "labelHide")):
+                    visible_labels.append(label_name)
+            
+            return sorted(visible_labels)
+
         except HttpError:
             logging.exception("Failed to fetch mailboxes")
             return []
         except Exception:
             logging.exception("An unexpected error occurred in fetch_mailboxes")
             return []
-        else:
-            return [label["name"] for label in labels]
+
+    def _get_email_metadata(self, message_id: str) -> dict[str, Any] | None:
+        """Fetch metadata for a single email."""
+        result_data: dict[str, Any] | None = None
+        if self.__service is None:
+            logging.error("Cannot fetch metadata: service not available")
+            return None
+        try:
+            message = self.__service.users().messages().get(
+                userId="me",
+                id=message_id,
+                format="metadata",
+                metadataHeaders=["From", "Subject", "Date"],
+            ).execute()
+
+            headers = message.get("payload", {}).get("headers", [])
+            email_data = {
+                "id": message_id,
+                "snippet": message.get("snippet", ""),
+                "subject": "",
+                "sender": "",
+                "date": "",
+            }
+
+            for header in headers:
+                name = header.get("name", "").lower()
+                if name == "subject":
+                    email_data["subject"] = header.get("value", "")
+                elif name == "from":
+                    email_data["sender"] = header.get("value", "")
+                elif name == "date":
+                    email_data["date"] = header.get("value", "")
+
+            logging.debug(
+                "Retrieved metadata: subject='%s', from='%s'",
+                email_data["subject"],
+                email_data["sender"],
+            )
+            result_data = email_data
+
+        except HttpError as e:
+            logging.warning("Failed to fetch details for message %s: %s", message_id, str(e))
+
+        return result_data
 
     def get_emails_list(self, mailbox: str = "INBOX", limit: int = 10) -> list[dict[str, Any]]:
         """Fetch a list of emails from the specified mailbox."""
         if not self.__authenticated or not self.__service:
+            logging.error("Cannot get emails: not authenticated or service not available")
             return []
 
         email_list: list[dict[str, Any]] = []
         try:
-            results = (
-                self.__service.users()
-                .messages()
-                .list(
-                    userId="me",
-                    labelIds=[mailbox],
-                    maxResults=limit,
-                )
-                .execute()
-            )
+            labels = self.fetch_mailboxes()
+            if mailbox not in labels and mailbox != "INBOX":
+                logging.warning("Mailbox '%s' not found in available labels: %s", mailbox, labels)
+                return []
 
+            logging.info("Fetching up to %d messages from mailbox '%s'", limit, mailbox)
+            query = self.__service.users().messages().list(
+                userId="me",
+                labelIds=[mailbox],
+                maxResults=limit,
+            )
+            
+            results = query.execute()
             messages = results.get("messages", [])
 
             if not messages:
-                pass
-            else:
-                for msg in messages:
-                    message = (
-                        self.__service.users()
-                        .messages()
-                        .get(
-                            userId="me",
-                            id=msg["id"],
-                            format="metadata",
-                            metadataHeaders=["From", "Subject"],
-                        )
-                        .execute()
-                    )
+                logging.info("No messages found in mailbox '%s' (this is normal for empty mailboxes)", mailbox)
+                return []
 
-                    headers = message["payload"]["headers"]
-                    email_data = {
-                        "id": msg["id"],
-                        "snippet": message.get("snippet", ""),
-                        "subject": "",
-                        "sender": "",
-                    }
+            for msg in messages:
+                email_metadata = self._get_email_metadata(msg["id"])
+                if email_metadata:
+                    email_list.append(email_metadata)
 
-                    for header in headers:
-                        if header["name"] == "Subject":
-                            email_data["subject"] = header["value"]
-                        elif header["name"] == "From":
-                            email_data["sender"] = header["value"]
-
-                    email_list.append(email_data)
+            logging.info("Successfully retrieved %d emails from mailbox '%s'", len(email_list), mailbox)
 
         except HttpError:
             logging.exception("Failed to get email list for mailbox '%s'", mailbox)
+            return [] # Return empty list on HttpError
         except Exception:
             logging.exception("An unexpected error occurred in get_emails_list")
-
-        return email_list
+            return []
+        else:
+            return email_list
 
     def _parse_email_headers(self, headers: list[dict[str, str]]) -> dict[str, str]:
         """Parse relevant fields from email headers."""
@@ -393,27 +438,34 @@ class GmailClientImpl(GmailClientInterface):
     def send_email(self, to: str, subject: str, body: str) -> bool:
         """Send an email to the specified recipient."""
         if not self.__authenticated or not self.__service:
+            logging.error("Cannot send email: not authenticated or service not available")
             return False
 
-        success = False
         try:
-            message = MIMEText(body)
+            message = MIMEText(body, "plain", "utf-8")
             message["to"] = to
+            message["from"] = "me"
             message["subject"] = subject
 
-            encoded_message = urlsafe_b64encode(message.as_bytes()).decode()
+            raw = base64.urlsafe_b64encode(message.as_bytes())
+            raw_string = raw.decode("utf-8")
+            
+            try:
+                self.__service.users().messages().send(
+                    userId="me",
+                    body={"raw": raw_string},
+                ).execute()
+                logging.info("Successfully sent email to %s", to)
+            except HttpError as error:
+                error_details = error.error_details if hasattr(error, "error_details") else str(error)
+                logging.exception("Failed to send email via Gmail API: %s", error_details)
+                return False
+            else:
+                return True
 
-            self.__service.users().messages().send(
-                userId="me",
-                body={"raw": encoded_message},
-            ).execute()
-            success = True
-        except HttpError:
-            logging.exception("Failed to send email to '%s'", to)
         except Exception:
-            logging.exception("An unexpected error occurred in send_email")
-
-        return success
+            logging.exception("Error preparing email message")
+            return False
 
     def delete_email(self, email_id: str) -> bool:
         """Delete an email by its ID."""
