@@ -19,11 +19,7 @@ from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 from inbox_api import GmailClientInterface
 
-SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
-    "https://www.googleapis.com/auth/gmail.send",
-    "https://www.googleapis.com/auth/gmail.modify",
-]
+from .scopes import SCOPES
 
 logging.basicConfig(
     level=logging.INFO,
