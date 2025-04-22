@@ -142,3 +142,7 @@ class GmailClientInterface(ABC):
             bool: True if labels were modified successfully, False otherwise.
 
         """
+
+def get_client() -> GmailClientInterface:
+    """Return an instance of a Mail Client."""
+    raise NotImplementedError
