@@ -31,6 +31,7 @@ jobs:
           paths:
             - .venv
             - hw2_inbox
+            - inbox_api
             - pyproject.toml
             # If your repo structure has other dirs/files you need, list them too.
 
@@ -44,6 +45,7 @@ jobs:
           command: |
             source .venv/bin/activate
             ruff check hw2_inbox
+            ruff check inbox_api
 
   type-check:
     executor: python-executor
@@ -55,6 +57,7 @@ jobs:
           command: |
             source .venv/bin/activate
             mypy hw2_inbox
+            mypy inbox_api
 
   test:
     executor: python-executor

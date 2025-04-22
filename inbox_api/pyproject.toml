@@ -1,0 +1,69 @@
+[project]
+name = "inbox-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "uv>=0.6.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "coverage>=7.6.12",
+    "google-api-python-client>=2.166.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.2.1",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "pytest-mock>=3.14.0",
+    "ruff>=0.9.9",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "E501",
+    "ANN101",
+    "D100",
+    "D103",
+    "W293" # White spaces are used for indentation in doc strings
+]
+exclude = ["**/test_*.py", "**/*_test.py"]
+
+[tool.ruff.lint.per-file-ignores]
+"*_test.py" = ["S101", "PLR2004"]
+
+[tool.mypy]
+strict = true  # Enable strict mode for type checking
+
+disallow_untyped_calls = true  # Prevent calling functions without type annotations
+disallow_untyped_defs = true  # Prevent defining functions without type annotations
+disallow_incomplete_defs = true  # Ensure all function annotations are complete
+
+warn_unused_ignores = true  # Warn if `# type: ignore` is used but unnecessary
+warn_redundant_casts = true  # Warn about redundant type casts
+warn_unreachable = true  # Warn about unreachable code
+warn_return_any = true  # Warn if a function returns `Any`
+warn_unused_configs = true  # Warn about unused mypy configurations
+
+ignore_missing_imports = true  # Ignore missing imports (some external libraries may lack type hints)
+
+[[tool.mypy.overrides]]
+module = [
+    "google_auth_oauthlib.*",
+    "googleapiclient.*"
+]
+ignore_missing_imports = true
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["inbox_api"]
