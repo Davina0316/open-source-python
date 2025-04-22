@@ -75,7 +75,7 @@ jobs:
             # Run pytest under coverage, generating a JUnit XML test report
             set +e
 
-            coverage run --source=src,hw2_inbox -m pytest \
+            coverage run --source=inbox_api,inbox_impl -m pytest \
               --junitxml=test-results/results.xml \
               --html=test-results/report.html \
               --self-contained-html
