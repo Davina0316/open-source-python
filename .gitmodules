@@ -1,0 +1,3 @@
+[submodule "ai_chat_client"]
+	path = ai_chat_client
+	url = https://github.com/BhanuPrakashNani/python-template-repo.git
