@@ -7,6 +7,8 @@ project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from inbox_impl.src.inbox_impl._impl import GmailClientImpl  # noqa: E402
+from hw4_integration.src.ai_wrapper import get_spam_probability  # noqa: E402
+from hw4_integration.src.write_spam_csv import write_spam_results  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",
@@ -14,103 +16,68 @@ logging.basicConfig(
 
 
 class MailAiIntegration:
-    """Integrates Gmail functionalities."""
+    """Integrates Gmail and AI spam detection."""
 
     def __init__(self) -> None:
-        """Initialize the MailAiIntegration."""
         self.gmail_client = GmailClientImpl()
 
     def connect(self) -> bool:
-        """Connect to the Gmail service.
-
-        Returns:
-            bool: True if connection is successful, False otherwise.
-
-        """
         return self.gmail_client.connect()
 
-    def crawl_get_email_content(
-        self,
-        mailbox: str = "INBOX",
-        limit: int = 10,
-    ) -> list[str] | None:
-        """Crawl and retrieve the body content of the latest emails.
+    def crawl_get_email_content(self, mailbox: str = "INBOX", limit: int = 10) -> tuple[list[str], list[str]]:
+        email_bodies = []
+        mail_ids = []
 
-        Args:
-            mailbox: The mailbox to crawl (default: "INBOX").
-            limit: The maximum number of emails to retrieve (default: 10).
-
-        Returns:
-            A list of email bodies (strings), or None if the initial list fetch fails.
-            Errors fetching individual emails are logged but don't cause a None return.
-
-        """
-        email_bodies: list[str] = []
         try:
-            logging.info("Fetching the latest %d emails from %s...", limit, mailbox)
+            logging.info("Fetching emails from %s...", mailbox)
             email_list = self.gmail_client.get_emails_list(mailbox=mailbox, limit=limit)
-
             if not email_list:
                 logging.warning("No emails found in %s.", mailbox)
-                return []
-            logging.info("Found %d email(s) in %s.", len(email_list), mailbox)
+                return [], []
 
-        except Exception:
-            logging.exception("Failed to get email list from %s", mailbox)
-            return None
-        else:
-            for email_summary in email_list:
-                email_id = email_summary.get("id")
-                if not email_id:
-                    logging.warning("Found an email summary without an ID, skipping.")
+            for email in email_list:
+                mail_id = email.get("id", "")
+                if not mail_id:
                     continue
 
-                try:
-                    logging.debug("Fetching content for email ID: %s", email_id)
-                    content: dict[str, Any] | None = (
-                        self.gmail_client.get_email_content(email_id)
-                    )
-                    if content:
-                        body = content.get("body")
-                        if body:
-                            email_bodies.append(body)
-                            logging.debug("Successfully fetched body for ID: %s", email_id)
-                        else:
-                            logging.warning(
-                                "Email content found for ID %s, but body was missing.",
-                                email_id,
-                            )
-                    else:
-                        logging.warning(
-                            "get_email_content returned None or empty for ID %s", email_id,
-                        )
-                except Exception:
-                    logging.exception("Error fetching content for email ID %s", email_id)
+                content: dict[str, Any] = self.gmail_client.get_email_content(mail_id)
+                body = content.get("body", "") if content else ""
+                if body.strip():
+                    email_bodies.append(body)
+                    mail_ids.append(mail_id)
 
-            logging.info(
-                "Successfully processed %d emails, retrieved %d bodies.",
-                len(email_list),
-                len(email_bodies),
-            )
-            return email_bodies
+            logging.info("Retrieved %d valid email bodies.", len(email_bodies))
+            return email_bodies, mail_ids
 
-    def ai_client_detect_email_type(self, email_content: str) -> None:
-        """Detect the type of email based on the content (Placeholder)."""
-        logging.info("AI detection called for content: %s...", email_content[:100])
+        except Exception:
+            logging.exception("Failed to crawl Gmail.")
+            return [], []
+
+    def analyze_and_write_csv(self, email_bodies: list[str], mail_ids: list[str]) -> None:
+        results = []
+        for body, mail_id in zip(email_bodies, mail_ids):
+            try:
+                pct_spam = get_spam_probability(body)
+                results.append({"mail_id": mail_id, "Pct_spam": round(pct_spam, 2)})
+            except Exception as e:
+                logging.error("AI detection failed for email %s: %s", mail_id, str(e))
+
+        write_spam_results(results)
 
 
 if __name__ == "__main__":
     integration = MailAiIntegration()
+
     if integration.connect():
-        logging.info("Successfully connected to Gmail.")
-        retrieved_bodies = integration.crawl_get_email_content()
-        if retrieved_bodies is not None:
-            logging.info("Retrieved %d email bodies.", len(retrieved_bodies))
-            if retrieved_bodies:
-                integration.ai_client_detect_email_type(retrieved_bodies[0])
+        logging.info("Connected to Gmail successfully.")
+
+        email_bodies, mail_ids = integration.crawl_get_email_content(limit=10)
+
+        if email_bodies:
+            integration.analyze_and_write_csv(email_bodies, mail_ids)
+            logging.info("Spam analysis completed and written to CSV.")
         else:
-            logging.error("Failed to retrieve email content.")
+            logging.warning("No valid emails to process.")
 
     else:
         logging.error("Failed to connect to Gmail.")
-
