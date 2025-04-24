@@ -74,7 +74,11 @@ ignore_missing_imports = true  # Ignore missing imports (some external libraries
 
 
 [tool.uv.workspace]
-members = ["inbox_api", "inbox_impl"]
+members = [
+    "inbox_api",
+ "inbox_impl",
+ "hw4_integration",
+]
 
 [tool.setuptools]
 packages = []
