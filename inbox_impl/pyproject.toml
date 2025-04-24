@@ -1,38 +1,24 @@
 [project]
-name = "opsd-project"
+name = "inbox-impl"
 version = "0.1.0"
-description = "OPSD python project"
+description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "coverage==7.6.12",
+    "uv>=0.6.11",
     "google-api-python-client>=2.166.0",
-    "google-auth>=2.32.0",
     "google-auth-httplib2>=0.2.0",
     "google-auth-oauthlib>=1.2.1",
-    "iniconfig==2.0.0",
-    "markupsafe==3.0.2",
-    "packaging==24.2",
-    "pluggy==1.5.0",
-    "typing-extensions==4.12.2",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "coverage==7.6.12",
-    "mypy==1.15.0",
-    "mypy-extensions==1.0.0",
-    "pytest==8.3.5",
+    "coverage>=7.6.12",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
     "pytest-mock>=3.14.0",
-    "pytest-cov==6.0.0",
-    "pytest-html==4.1.1",
-    "pytest-metadata==3.1.1",
-    "ruff==0.9.9",
+    "ruff>=0.9.9",
 ]
-
-
-[project.scripts]
-opsd-project = "opsd_project:main"
 
 [build-system]
 requires = ["setuptools", "wheel"]
@@ -43,19 +29,18 @@ build-backend = "setuptools.build_meta"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["ALL"]  # Enable all rules in Ruff
+select = ["ALL"]
 ignore = [
-    "E501",  # Ignore line length issues (100 characters is already strict enough)
-    "ANN101", # Ignore missing type annotation for `self` (self and cls don't need type hints)
-    "D100",  # Ignore missing module-level docstring (not always necessary in small projects)
-    "D103",  # Ignore missing function docstring (test functions should be self-explanatory)
+    "E501",
+    "ANN101",
+    "D100",
+    "D103",
+    "W293" # White spaces are used for indentation in doc strings
 ]
-fixable = ["ALL"]  # Allow Ruff to auto-fix all issues
+exclude = ["**/test_*.py", "**/*_test.py"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/test_*.py" = ["S101", "PLR2004"]  # Ignore assert and magic number warnings in test files
-"**/tests/*.py" = ["S101", "PLR2004"]  # Ignore assert and magic number warnings in test files
-"**/*_test.py" = ["S101", "PLR2004"]  # Ignore assert and magic number warnings in test files
+"*_test.py" = ["S101", "PLR2004"]
 
 [tool.mypy]
 strict = true  # Enable strict mode for type checking
@@ -72,13 +57,6 @@ warn_unused_configs = true  # Warn about unused mypy configurations
 
 ignore_missing_imports = true  # Ignore missing imports (some external libraries may lack type hints)
 
-
-[tool.uv.workspace]
-members = ["inbox_api", "inbox_impl"]
-
-[tool.setuptools]
-packages = []
-
 [[tool.mypy.overrides]]
 module = [
     "google_auth_oauthlib.*",
@@ -86,3 +64,6 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["inbox_impl"]

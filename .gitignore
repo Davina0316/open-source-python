@@ -172,3 +172,9 @@ cython_debug/
 
 # ruff
 .ruff_cache
+
+.vscode
+credentials.json
+token.json
+
+.DS_Store
