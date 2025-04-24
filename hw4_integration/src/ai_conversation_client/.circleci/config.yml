@@ -1,0 +1,165 @@
+version: 2.1
+
+jobs:
+  test:
+    parallelism: 4
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+
+      - run:
+          name: Install UV
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - run:
+          name: Create uv virtual environment
+          command: uv venv
+
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export PYTHONPATH=$(pwd)" >> $BASH_ENV
+            echo "source .venv/bin/activate" >> $BASH_ENV
+
+      - run:
+          name: Install dependencies and testing tools
+          command: |
+            uv pip install -e ".[dev]"
+            # uv pip install nose2[coverage_plugin]
+            uv pip install pytest pytest-cov pytest-xdist pytest-reportlog
+
+      - run:
+          name: Debug test discovery
+          command: |
+            echo "Test directories structure:"
+            find src tests -type d | sort
+            echo "\nTest files:"
+            find src tests -name "test_*.py" | sort
+
+      - run:
+          name: Run tests
+          command: |
+            mkdir -p test-results
+            echo "Running tests with pytest..."
+            PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}$PWD pytest \
+              -v \
+              --cov=src \
+              --cov-report=term \
+              --cov-report=xml:test-results/coverage.xml \
+              --cov-report=html:test-results/coverage-html \
+              --junitxml=test-results/junit.xml \
+              -n auto \
+              src tests
+            echo "\nChecking test results directory:"
+            ls -la test-results/ || echo "Test results directory is empty"
+            echo "\nChecking for coverage data:"
+            ls -la .coverage || echo "No coverage data found"
+
+      - run:
+          name: Generate coverage reports
+          command: |
+            echo "Generating coverage reports..."
+            if [ -f .coverage ]; then
+              coverage report -m
+            else
+              echo "No coverage data found (.coverage file missing)"
+              mkdir -p test-results/coverage-html
+              echo "<html><body><h1>No coverage data collected</h1></body></html>" > test-results/coverage-html/index.html
+              echo "<?xml version='1.0' encoding='utf-8'?><coverage></coverage>" > test-results/coverage.xml
+            fi
+
+      - store_test_results:
+          path: test-results/junit.xml
+
+      - store_artifacts:
+          path: test-results/
+          destination: test-results
+
+  code_quality:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+
+      - run:
+          name: Install UV
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - run:
+          name: Create uv virtual environment
+          command: uv venv
+
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export PYTHONPATH=$(pwd)" >> $BASH_ENV
+            echo "source .venv/bin/activate" >> $BASH_ENV
+
+      - run:
+          name: Install dependencies and Ruff
+          command: |
+            uv pip install -e ".[dev]"
+            uv pip install ruff
+
+      - run:
+          name: Run Ruff formatting
+          command: |
+            echo "Running Ruff formatter to fix line length and formatting issues..."
+            ruff format src/ tests/
+
+      - run:
+          name: Run Ruff linting
+          command: |
+            echo "Running Ruff linter to check for code quality issues..."
+            ruff check src/ tests/ --fix
+            ruff check src/ tests/
+
+  dependency_scanning:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+
+      - run:
+          name: Install UV
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - run:
+          name: Create uv virtual environment
+          command: uv venv
+
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export PYTHONPATH=$(pwd)" >> $BASH_ENV
+            echo "source .venv/bin/activate" >> $BASH_ENV
+
+      - run:
+          name: Install dependencies and Safety (pin to v2)
+          command: |
+            uv pip install -e ".[dev]"
+            uv pip install "safety<3" "marshmallow<4"
+
+      - run:
+          name: Run Safety Check (dependency scanning)
+          command: |
+            if [ -f requirements.txt ]; then
+              echo "Using safety check on requirements.txt..."
+              safety check --file=requirements.txt --full-report
+            else
+              echo "Running full-project safety check..."
+              safety check --full-report
+            fi
+
+
+workflows:
+  version: 2
+  test_and_scan:
+    jobs:
+      - test
+      - code_quality
+      - dependency_scanning
