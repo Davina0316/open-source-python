@@ -1,26 +1,36 @@
-import sys
-import re
-from pathlib import Path
+from aichat_client.ai_conversation_client.gemini_api_client import GeminiAPIClient
+from aichat_client.ai_conversation_client.client import AIConversationClient
 
-# Add ai_conversation_client/src to sys.path
-client_module_root = Path(__file__).resolve().parent / "ai_conversation_client"
-sys.path.insert(0, str(client_module_root))
 
-from src.components.ai_conversation_client.factory import AIClientFactory
+_gemini_api = GeminiAPIClient()
+_ai_client = AIConversationClient(api_client=_gemini_api)
 
-client = AIClientFactory.create_client("mock")
-session_id = client.start_new_session("spam_checker")
 
-def get_spam_probability(email_body: str) -> float:
-    prompt = (
-        "Please read the following email and return a number representing the "
-        "probability that it is a spam email (0 to 100). "
-        "Only return the number, without explanation.\n\n"
-        f"Email content:\n{email_body}"
-    )
-    response = client.send_message(session_id, prompt)["response"]
-    match = re.search(r"(\d+(\.\d+)?)", response)
-    if match:
-        return float(match.group(1))
-    else:
-        raise ValueError(f"AI response did not contain a valid number: {response}")
+def get_spam_probability(email_text: str) -> float:
+    """
+    Using Gemini AI to determin the probability of spam，return value is  0.0 to 1.0.
+    """
+
+    try:
+        prompt = (
+            "Please analyze the following email content and return the probability "
+            "that it is spam as a number between 0 and 100. Just return the number.\n\n"
+            f"{email_text.strip()}"
+        )
+
+        session_id = _ai_client.start_new_session(user_id="spam-detector")
+        response = _ai_client.send_message(session_id, prompt)
+        _ai_client.end_session(session_id)
+
+        reply_text = response["content"].strip()
+
+        import re
+        match = re.search(r"\d{1,3}", reply_text)
+        if match:
+            pct = int(match.group(0))
+            return min(1.0, max(0.0, pct / 100.0))
+        else:
+            return 0.0
+    except Exception as e:
+        print(f"[Spam AI] Failed to analyze message: {e}")
+        return 0.0
