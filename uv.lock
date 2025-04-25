@@ -383,12 +383,35 @@ dependencies = [
     { name = "inbox-impl" },
 ]
 
+[package.optional-dependencies]
+dev = [
+    { name = "coverage" },
+    { name = "mypy" },
+    { name = "mypy-extensions" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-html" },
+    { name = "pytest-metadata" },
+    { name = "pytest-mock" },
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "aichat-client", virtual = "hw4_integration/src/aichat_client" },
+    { name = "coverage", marker = "extra == 'dev'", specifier = "==7.6.12" },
     { name = "inbox-api", editable = "inbox_api" },
     { name = "inbox-impl", editable = "inbox_impl" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = "==1.15.0" },
+    { name = "mypy-extensions", marker = "extra == 'dev'", specifier = "==1.0.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = "==8.3.5" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==6.0.0" },
+    { name = "pytest-html", marker = "extra == 'dev'", specifier = "==4.1.1" },
+    { name = "pytest-metadata", marker = "extra == 'dev'", specifier = "==3.1.1" },
+    { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.14.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.9.9" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "idna"
