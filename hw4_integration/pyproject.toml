@@ -4,4 +4,9 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["aichat-client", "inbox-api", "inbox-impl"]
+
+[tool.uv.sources]
+aichat-client = { workspace = true }
+inbox-api     = { workspace = true }
+inbox-impl    = { workspace = true }
