@@ -1,118 +1,166 @@
 # Open Source Python Project
 
 ## Description
-This repository serves as a Python project template for **CS-GY 9223 Open Source Development**, providing a structured foundation for designing and maintaining fully equipped Python projects. It includes configurations for **continuous integration (CircleCI)**, **static analysis (Ruff & Mypy)**, **code formatting**, and **dependency management using uv**.
+
+This repository is the final integration project for **CS-GY 9223 Open Source Development**.  
+It implements a spam detection pipeline that connects:
+
+- **Gmail Inbox via OAuth**
+- **LLM-powered AI spam scoring via Gemini API**
+- **CSV report generation for spam probability**
+
+The project uses components provided by other teams and integrates them with our own `GmailClient` implementation.
+
+---
+
+## ⚠️ API Key Setup
+
+Before running the application, please **create a `.env` file** in the project root:
+
+```
+GEMINI_API_KEY=your_google_gemini_api_key_here
+```
+
+You can get a Gemini API key from:  
+https://makersuite.google.com/app/apikey  
+_or_ set up via Google Cloud Console:  
+https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com
 
 ---
 
 ## Prerequisites
+
 - Python **3.11 or higher**
-- `uv` for Python dependency management
+- Gmail account with developer access
+- Google Gemini API Key
+- `uv` for dependency management (or use `pip` if you prefer)
 
 ---
 
 ## Project Setup
 
-### **1. Clone the Repository**
+### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/Davina0316/open-source-python.git
 ```
 
-### **2. Navigate to the Project Directory**
+### 2. Navigate to the Project Directory
+
 ```bash
 cd open-source-python
 ```
 
-### **3. Install uv (if not already installed)**
+### 3. Install uv (if not already installed)
+
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-Or any other way that works for you. Refer to [install uv](https://docs.astral.sh/uv/getting-started/installation/).
-### **4. Create virtual environment using uv**
+
+### 4. Create virtual environment using uv
+
 ```bash
 uv venv --python 3.11
 ```
 
-### **5. Activate virtual environment**
+### 5. Activate virtual environment
+
 ```bash
 .venv\Scripts\activate
 ```
 
-### **6. Install Project Dependencies**
+### 6. Install Project Dependencies
+
 ```bash
 uv sync
 ```
 
+---
+
 ## Running the Application
-To run the application, use:
-```bash
-uv run python src\calculator_component\main.py
-uv run python src\logger_component\main.py
-uv run python src\notifier_component\main.py
+
+The main integration logic is in:
+
+```
+hw4_integration/src/main.py
 ```
 
+To run the spam detection:
+
+```bash
+cd hw4_integration/src
+python main.py
+```
+
+This will:
+
+- Connect to your Gmail  
+- Fetch up to 10 emails  
+- Analyze them with Gemini LLM  
+- Output results to `spam_results.csv`
+
+---
+
+## Output Format
+
+The `spam_results.csv` file will contain results like:
+
+```
+mail_id,Pct_spam
+1856bd7b24e9e132,0.87
+f87dfc8880df19bd,0.12
+```
+
+---
 
 ## Testing
-To run tests, execute:
+
+Run unit tests with:
+
 ```bash
 pytest --cov=src
 ```
 
-This will run unit tests and generate a coverage report.
+---
 
 ## Static Analysis & Code Formatting
-To check and auto-fix code style and type errors, run:
+
+Run static checks and type validation:
+
 ```bash
 ruff check src --fix
 mypy src
 ```
 
-## Continuous Integration (CI/CD)
-This project is set up with **CircleCI**, which automatically:
+---
 
-- Runs tests (`pytest`)
-- Checks code quality (`ruff`, `mypy`)
-- Enforces code formatting and linting rules
+## Notes on AI Integration
 
-Any new commits pushed to GitHub will trigger these checks.
+The Gemini-based AI conversation component was adapted from another team's implementation, located under:
 
+```
+hw4_integration/src/aichat_client/ai_conversation_client/
+```
 
-
-## Contributing
-Contributions are welcome! We use **GitHub** for:
-- Issue tracking
-- Feature requests
-- Pull requests
-
-## Bug Reports & Feature Requests
-Please use the provided issue templates when submitting:
-- Bug reports
-- Feature requests
-
-Navigate to .github/ISSUE_TEMPLATE to find the appropriate templates.
-
-## Pull Requests
-
-Follow these steps to submit a pull request:
-
-1. Use the **Pull Request Template** in `.github/pull_request_template.md`.
-2. Provide a clear summary of the changes.
-3. Explain the motivation behind the update.
-4. Ensure all tests pass before submission (`pytest --cov=src`).
-5. Follow the coding guidelines (`ruff`, `mypy`).
-
-By contributing, you agree that your contributions will be licensed under the project’s license.
-
-
-## License
-
-This project is licensed under the **MIT License** - see the [`LICENSE`](LICENSE) file for details.
+The component uses `GeminiAPIClient` to call Google's Generative Language API for spam probability scoring.
 
 ---
 
-## Additional Information
+## .gitignore Notes
 
-- The `.gitignore` file is configured to ignore Python-specific files, such as `__pycache__` and the `venv` directory.
-- For further details on project structure and development workflow, refer to the documentation in the `docs` directory.
+The `.gitignore` excludes:
 
+```
+.env
+__pycache__/
+.venv/
+```
+
+To avoid exposing API secrets and unnecessary files.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**. See the `LICENSE` file for more details.
 
