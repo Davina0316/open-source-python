@@ -32,6 +32,8 @@ jobs:
             - .venv
             - inbox_api
             - inbox_impl
+            - aichat_client
+            - hw4_integration
             - pyproject.toml
             # If your repo structure has other dirs/files you need, list them too.
 
