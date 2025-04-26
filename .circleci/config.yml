@@ -48,6 +48,7 @@ jobs:
             source .venv/bin/activate
             ruff check inbox_api
             ruff check inbox_impl
+            ruff check hw4_integration
 
   type-check:
     executor: python-executor
@@ -60,6 +61,7 @@ jobs:
             source .venv/bin/activate
             mypy inbox_api
             mypy inbox_impl
+            mypy hw4_integration
 
   test:
     executor: python-executor
@@ -75,7 +77,7 @@ jobs:
             # Run pytest under coverage, generating a JUnit XML test report
             set +e
 
-            coverage run --source=inbox_api,inbox_impl -m pytest \
+            coverage run --source=inbox_api,inbox_impl,hw4_integration -m pytest inbox_api inbox_impl hw4_integration\
               --junitxml=test-results/results.xml \
               --html=test-results/report.html \
               --self-contained-html
