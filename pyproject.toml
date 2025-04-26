@@ -78,7 +78,7 @@ members = [
  "inbox_api",
  "inbox_impl",
  "hw4_integration",
- "hw4_integration/src/aichat_client"
+ "aichat_client"
 ]
 
 [tool.setuptools]
