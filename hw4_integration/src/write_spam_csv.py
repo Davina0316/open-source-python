@@ -1,20 +1,22 @@
 import csv
 import logging
-from typing import List, Dict
+from pathlib import Path
+from typing import Any
 
-def write_spam_results(results: List[Dict[str, float]], filename: str = "spam_results.csv") -> None:
-    """Write spam detection results to a CSV file.
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-    Args:
-        results: A list of dictionaries with keys 'mail_id' and 'Pct_spam'.
-        filename: Output CSV filename (default: 'spam_results.csv').
-    """
+# Define the CSV filename
+CSV_FILENAME = "spam_detection_results.csv"
+
+def write_spam_results(results: list[dict[str, Any]], filename: str = CSV_FILENAME) -> None:
+    """Write spam detection results to a CSV file."""
     try:
-        with open(filename, mode="w", newline="", encoding="utf-8") as file:
+        with Path(filename).open(mode="w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=["mail_id", "Pct_spam"])
             writer.writeheader()
-            for row in results:
-                writer.writerow(row)
+            writer.writerows(results)
+
         logging.info("Spam detection results written to %s", filename)
-    except Exception as e:
-        logging.exception("Failed to write spam results to CSV: %s", e)
+    except Exception:
+        logging.exception("Failed to write spam results to CSV")

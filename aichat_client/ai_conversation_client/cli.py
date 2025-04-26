@@ -8,6 +8,7 @@ including starting a chat, showing message history, and managing sessions.
 
 import argparse
 import asyncio
+
 from .client import AIConversationClient
 
 async def interactive_chat(client: AIConversationClient, user_id: str) -> None:
@@ -103,8 +104,8 @@ async def run_cli(client: AIConversationClient) -> None:
 
 if __name__ == "__main__":
     import asyncio
-    from ai_conversation_client.client import AIConversationClient
-    from ai_conversation_client.gemini_api_client import GeminiAPIClient
+    # from ai_conversation_client.client import AIConversationClient # No longer needed here
+    from .gemini_api_client import GeminiAPIClient
 
     # Create the backend Gemini client and wrap it in a high-level interface
     api_client = GeminiAPIClient()

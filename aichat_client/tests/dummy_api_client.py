@@ -1,4 +1,4 @@
-from ai_conversation_client.interface import IAIConversationClient
+from ..ai_conversation_client.interface import IAIConversationClient
 from typing import Any
 
 class DummyAPIClient(IAIConversationClient):
