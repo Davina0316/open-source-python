@@ -81,7 +81,7 @@ class GmailClientInterface(ABC):
         """
 
     @abstractmethod
-    def get_emails_list(self) -> list[dict[str, Any]]:
+    def get_emails_list(self, mailbox: str = "INBOX", limit: int = 10) -> list[dict[str, Any]]:
         """Fetch a list of emails.
 
         Returns:

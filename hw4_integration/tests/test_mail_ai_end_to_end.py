@@ -1,19 +1,30 @@
 # tests/test_mail_ai_integration_to_tmp.py
 import logging
-import hw4_integration.src.main as mail_module
+from pathlib import Path
+
 import pytest
 
+import hw4_integration.src.main as mail_module
+
+
 class DummyGmailClient:
-    def __init__(self): self._connected = False
+    """A dymmy gmail client class for testing, mocking some of the methods."""
+
+    def __init__(self) -> None:
+        """Init dummy client."""
+        self._connected = False
     def connect(self) -> bool:
+        """Connect stub."""
         self._connected = True
         return True
-    def get_emails_list(self, mailbox: str, limit: int):
+    def get_emails_list(self, mailbox: str, limit: int) -> list[dict[str, str]]:
+        """Get dummy email list."""
         return [{"id": "m1"}, {"id": "m2"}][:limit]
-    def get_email_content(self, mail_id: str):
+    def get_email_content(self, mail_id: str) -> dict[str, str]:
+        """Get dummy email content."""
         return {"body": f"body_of_{mail_id}"}
 
-def test_writes_spam_csv_into_tmp(tmp_path, monkeypatch, caplog):
+def test_writes_spam_csv_into_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
 
     # 1) cd into a temp directory
@@ -21,7 +32,10 @@ def test_writes_spam_csv_into_tmp(tmp_path, monkeypatch, caplog):
 
     # 2) patch the imports in hw4_integration.main
     monkeypatch.setattr(mail_module, "GmailClientImpl", DummyGmailClient)
-    monkeypatch.setattr(mail_module, "get_spam_probability", lambda x: 0.88)
+    def ret_088(x: str) -> float:
+        return len(x) * 0 + 0.88
+
+    monkeypatch.setattr(mail_module, "get_spam_probability", ret_088)
 
     # 3) run end-to-end
     integration = mail_module.MailAiIntegration()

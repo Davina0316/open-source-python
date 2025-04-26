@@ -1,5 +1,5 @@
-from .aichat_client.ai_conversation_client.gemini_api_client import GeminiAPIClient
-from .aichat_client.ai_conversation_client.client import AIConversationClient
+from aichat_client.ai_conversation_client.gemini_api_client import GeminiAPIClient
+from aichat_client.ai_conversation_client.client import AIConversationClient
 
 
 _gemini_api = GeminiAPIClient()

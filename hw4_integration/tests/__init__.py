@@ -1,1 +1,1 @@
-"""Test the integration of AI Client and Inbox Client"""
+"""Test the integration of AI Client and Inbox Client."""
