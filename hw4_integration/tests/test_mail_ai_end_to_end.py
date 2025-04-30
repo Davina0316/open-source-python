@@ -37,6 +37,15 @@ def test_writes_spam_csv_into_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(mail_module, "get_spam_probability", ret_088)
 
+    def fake_write_spam_results(results: list[dict[str, float]]) -> None:
+        out = tmp_path / "spam_results.csv"
+        with Path.open(out, "w") as f:
+            f.write("mail_id,Pct_spam\n")
+            for r in results:
+                f.write(f"{r['mail_id']},{r['Pct_spam']}\n")
+
+    monkeypatch.setattr(mail_module, "write_spam_results", fake_write_spam_results)
+
     # 3) run end-to-end
     integration = mail_module.MailAiIntegration()
     assert integration.connect() is True
