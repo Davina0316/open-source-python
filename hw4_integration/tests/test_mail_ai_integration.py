@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -11,7 +12,6 @@ from inbox_impl.src.inbox_impl._impl import GmailClientImpl as RealGmailClientIm
 
 if TYPE_CHECKING:
     # Only used for type hint
-    from pathlib import Path
     from unittest.mock import MagicMock
 
     from _pytest.monkeypatch import MonkeyPatch
@@ -179,6 +179,19 @@ def test_analyze_continues_on_spam_errors_and_writes(tmp_path: Path,
     """analyze_and_write_csv should skip on spam detection errors, but still write valid rows."""
     # change cwd for CSV output
     monkeypatch.chdir(tmp_path)
+
+    def fake_write_spam_results(rows: list[dict[str, float]]) -> None:
+        out = tmp_path / "spam_results.csv"
+        with Path.open(out, "w", newline="") as f:
+            f.write("mail_id,Pct_spam\n")
+            for r in rows:
+                f.write(f"{r['mail_id']},{r['Pct_spam']}\n")
+
+    monkeypatch.setattr(
+        "hw4_integration.src.main.write_spam_results",
+        fake_write_spam_results,
+        raising=True,
+    )
 
     # stub spam probability: first call fails, second succeeds
     class FlakySpam:
