@@ -3,6 +3,10 @@ import re
 
 from aichat_client.ai_conversation_client.client import AIConversationClient
 from aichat_client.ai_conversation_client.gemini_api_client import GeminiAPIClient
+from .constants import SPAM_PROBABILITY_PATTERN, SPAM_DETECTION_PROMPT
+from dotenv import load_dotenv
+load_dotenv()
+import os
 
 _gemini_api = GeminiAPIClient()
 _ai_client = AIConversationClient(api_client=_gemini_api)
@@ -13,11 +17,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 def get_spam_probability(email_text: str) -> float:
     """Use Gemini AI to determine the probability of spam; return value is 0.0 to 1.0."""
     try:
-        prompt = (
-            "Please analyze the following email content and return the probability "
-            "that it is spam as a number between 0 and 100. Just return the number.\n\n"
-            f"{email_text.strip()}"
-        )
+        prompt = SPAM_DETECTION_PROMPT + email_text.strip()
 
         session_id = _ai_client.start_new_session(user_id="spam-detector")
         response = _ai_client.send_message(session_id, prompt)
@@ -25,13 +25,12 @@ def get_spam_probability(email_text: str) -> float:
 
         reply_text = response["content"].strip()
 
-        match = re.search(r"\d+", reply_text)
+        match = re.search(SPAM_PROBABILITY_PATTERN, reply_text)
         if match:
             pct = int(match.group(0))
             return min(1.0, max(0.0, pct / 100.0))
     except Exception:
         logging.exception("[Spam AI] Failed to analyze message")
-        return 0.0  # Default return on exception
+        return 0.0
 
-    # Default return if no match is found or other issues occur within try block
     return 0.0

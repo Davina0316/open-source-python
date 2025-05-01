@@ -7,7 +7,7 @@ from typing import Any
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Define the CSV filename
-CSV_FILENAME = "spam_detection_results.csv"
+CSV_FILENAME = "spam_results.csv"
 
 def write_spam_results(results: list[dict[str, Any]], filename: str = CSV_FILENAME) -> None:
     """Write spam detection results to a CSV file."""
