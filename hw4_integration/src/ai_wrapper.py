@@ -6,16 +6,16 @@ from dotenv import load_dotenv
 from aichat_client.ai_conversation_client.client import AIConversationClient
 from aichat_client.ai_conversation_client.gemini_api_client import GeminiAPIClient
 
-from .constants import SPAM_PROBABILITY_PATTERN, SPAM_DETECTION_PROMPT
+from .constants import SPAM_DETECTION_PROMPT, SPAM_PROBABILITY_PATTERN
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 _gemini_api = GeminiAPIClient()
 _ai_client = AIConversationClient(api_client=_gemini_api)
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 def get_spam_probability(email_text: str) -> float:
     """Use Gemini AI to determine the probability of spam; return value is 0.0 to 1.0."""
@@ -33,7 +33,7 @@ def get_spam_probability(email_text: str) -> float:
             pct = int(match.group(0))
             return min(1.0, max(0.0, pct / 100.0))
     except Exception:
-        logging.exception("[Spam AI] Failed to analyze message")
+        logger.exception("[Spam AI] Failed to analyze message")
         return 0.0
 
     return 0.0
