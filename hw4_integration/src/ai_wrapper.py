@@ -1,6 +1,8 @@
 import logging
 import re
+
 from dotenv import load_dotenv
+
 from aichat_client.ai_conversation_client.client import AIConversationClient
 from aichat_client.ai_conversation_client.gemini_api_client import GeminiAPIClient
 from .constants import SPAM_PROBABILITY_PATTERN, SPAM_DETECTION_PROMPT
