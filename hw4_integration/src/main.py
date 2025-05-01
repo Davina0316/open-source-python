@@ -50,11 +50,12 @@ class MailAiIntegration:
                     mail_ids.append(mail_id)
 
             logging.info("Retrieved %d valid email bodies.", len(email_bodies))
+            result = (email_bodies, mail_ids)
+
         except Exception:
             logging.exception("Failed to crawl Gmail.")
-            return [], []
-        else:
-            return email_bodies, mail_ids
+            result = ([], [])
+        return result
 
     def analyze_and_write_csv(self, email_bodies: list[str], mail_ids: list[str]) -> None:
         """Analyze email bodies for spam probability and write results to CSV."""
