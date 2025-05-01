@@ -9,6 +9,7 @@ from .constants import SPAM_PROBABILITY_PATTERN, SPAM_DETECTION_PROMPT
 
 load_dotenv()
 
+
 _gemini_api = GeminiAPIClient()
 _ai_client = AIConversationClient(api_client=_gemini_api)
 
