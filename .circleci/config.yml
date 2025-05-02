@@ -24,9 +24,7 @@ jobs:
           command: |
             uv venv --python 3.11
             source .venv/bin/activate
-            uv sync --extra dev
-            uv pip install -e inbox_api
-            uv pip install -e inbox_impl
+            uv sync --all-packages  --extra dev
       - persist_to_workspace:
           # Save the venv and all source code into a workspace
           root: .
@@ -34,6 +32,8 @@ jobs:
             - .venv
             - inbox_api
             - inbox_impl
+            - aichat_client
+            - hw4_integration
             - pyproject.toml
             # If your repo structure has other dirs/files you need, list them too.
 
@@ -48,6 +48,7 @@ jobs:
             source .venv/bin/activate
             ruff check inbox_api
             ruff check inbox_impl
+            ruff check hw4_integration
 
   type-check:
     executor: python-executor
@@ -60,6 +61,7 @@ jobs:
             source .venv/bin/activate
             mypy inbox_api
             mypy inbox_impl
+            mypy hw4_integration
 
   test:
     executor: python-executor
@@ -75,7 +77,7 @@ jobs:
             # Run pytest under coverage, generating a JUnit XML test report
             set +e
 
-            coverage run --source=inbox_api,inbox_impl -m pytest \
+            coverage run --source=inbox_api,inbox_impl,hw4_integration -m pytest inbox_api inbox_impl hw4_integration\
               --junitxml=test-results/results.xml \
               --html=test-results/report.html \
               --self-contained-html
@@ -114,6 +116,8 @@ workflows:
           requires:
             - setup
       - test:
+          context:
+            - OpenSource
           requires:
             - lint
             - type-check

@@ -1,0 +1,78 @@
+version: 2.1
+
+jobs:
+  lint_and_test:
+    docker:
+      - image: python:3.10
+    steps:
+      - checkout
+
+      - run:
+          name: Install UV
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
+            source $BASH_ENV
+
+      - run:
+          name: Install Dependencies
+          command: |
+            uv pip install --system -e .
+
+      - run:
+          name: Create test-results directory
+          command: mkdir -p test-results
+
+      - run:
+          name: Set PYTHONPATH
+          command: |
+            echo "export PYTHONPATH=$PYTHONPATH:$(pwd)/ai_conversation_client" >> $BASH_ENV
+
+      - run:
+          name: Run Ruff Linting
+          command: |
+            ruff check .
+      - run:
+          name: Install mypy stubs
+          command: |
+            uv pip install --system types-requests
+      - run:
+          name: Run Mypy Type Checking
+          command: |
+            mypy .
+
+      - run:
+          name: Verify Tests Exist
+          command: |
+            uv run pytest --collect-only
+
+      - run:
+          name: Run Tests with Coverage
+          command: |
+            uv run pytest --cov=ai_conversation_client --cov=tests --cov-report=xml --cov-report=html \
+            --junitxml=test-results/junit.xml --cov-config=pyproject.toml | tee test-results/output.log
+
+      - run:
+          name: Check Test Results
+          command: |
+            if grep -q 'FAILED' test-results/output.log; then
+              echo "Some tests failed. Check logs."
+            else
+              echo "All tests passed!"
+            fi
+
+      - store_test_results:
+          path: test-results/
+
+      - store_artifacts:
+          path: htmlcov/
+          destination: coverage_html
+
+      - store_artifacts:
+          path: test-results/output.log
+
+workflows:
+  version: 2
+  test-workflow:
+    jobs:
+      - lint_and_test

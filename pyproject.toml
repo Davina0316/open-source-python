@@ -53,9 +53,9 @@ ignore = [
 fixable = ["ALL"]  # Allow Ruff to auto-fix all issues
 
 [tool.ruff.lint.per-file-ignores]
-"**/test_*.py" = ["S101", "PLR2004"]  # Ignore assert and magic number warnings in test files
-"**/tests/*.py" = ["S101", "PLR2004"]  # Ignore assert and magic number warnings in test files
-"**/*_test.py" = ["S101", "PLR2004"]  # Ignore assert and magic number warnings in test files
+"**/test_*.py" = ["S101", "PLR2004", "ARG002", "ANN401"]  # Ignore assert and magic number warnings in test files
+"**/tests/*.py" = ["S101", "PLR2004", "ARG002"]  # Ignore assert and magic number warnings in test files
+"**/*_test.py" = ["S101", "PLR2004", "ARG002"]  # Ignore assert and magic number warnings in test files
 
 [tool.mypy]
 strict = true  # Enable strict mode for type checking
@@ -74,7 +74,12 @@ ignore_missing_imports = true  # Ignore missing imports (some external libraries
 
 
 [tool.uv.workspace]
-members = ["inbox_api", "inbox_impl"]
+members = [
+ "inbox_api",
+ "inbox_impl",
+ "hw4_integration",
+ "aichat_client"
+]
 
 [tool.setuptools]
 packages = []

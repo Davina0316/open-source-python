@@ -60,7 +60,7 @@ class TestGmailClientInterface:
             {"id": "2", "subject": "World", "sender": "b@example.com", "snippet": "Greetings"},
         ]
         mock_client.get_emails_list.return_value = emails
-        result = mock_client.get_emails_list()
+        result = mock_client.get_emails_list("INBOX", 2)
         assert result == emails
         mock_client.get_emails_list.assert_called_once()
 
